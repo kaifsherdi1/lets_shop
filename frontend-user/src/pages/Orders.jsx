@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { orderAPI } from '../api/orders';
 import { formatCurrency, getStoredCurrency } from '../utils/currency';
 import Header from '../components/layout/Header';
