@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { cartAPI } from '../api/cart';
 import { useAuth } from './AuthContext';
 
