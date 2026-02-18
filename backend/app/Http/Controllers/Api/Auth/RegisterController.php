@@ -6,12 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
+// ...
+
 class RegisterController extends Controller
 {
+    protected $otpService;
+
+    public function __construct(OtpService $otpService)
+    {
+        $this->otpService = $otpService;
+    }
+
     public function register(Request $request)
     {
         $request->validate([
@@ -49,11 +59,14 @@ class RegisterController extends Controller
             ]);
         }
 
+        // Generate OTP
+        $otpCode = $this->otpService->generateOtp($user->email, 'registration', $user->id);
+
         // Generate token
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Registration successful',
+            'message' => 'Registration successful. Please verify your email with the OTP sent.',
             'user' => [
                 'id' => $user->id,
                 'full_name' => $user->full_name,
@@ -62,6 +75,8 @@ class RegisterController extends Controller
                 'role' => $role->slug,
             ],
             'token' => $token,
+            'otp_required' => true,
+            'debug_otp' => config('app.debug') ? $otpCode : null
         ], 201);
     }
 }
