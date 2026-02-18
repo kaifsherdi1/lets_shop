@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
@@ -38,36 +39,40 @@ class CartController extends Controller
       ], 400);
     }
 
-    // Get or create cart
-    $cart = Cart::firstOrCreate(['user_id' => $request->user()->id]);
+    // Get or create cart and item with transaction
+    DB::beginTransaction();
 
-    // Check if item already exists in cart
-    $cartItem = CartItem::where('cart_id', $cart->id)
-      ->where('product_id', $product->id)
-      ->first();
+    try {
+      $cart = Cart::firstOrCreate(['user_id' => $request->user()->id]);
 
-    if ($cartItem) {
-      // Update quantity
-      $newQuantity = $cartItem->quantity + $request->quantity;
+      // Check if item already exists in cart
+      $cartItem = CartItem::where('cart_id', $cart->id)
+        ->where('product_id', $product->id)
+        ->first();
 
-      if ($product->stock_quantity < $newQuantity) {
-        return response()->json([
-          'message' => 'Insufficient stock available'
-        ], 400);
+      if ($cartItem) {
+        $newQuantity = $cartItem->quantity + $request->quantity;
+
+        if ($product->stock_quantity < $newQuantity) {
+          throw new \Exception('Insufficient stock available');
+        }
+
+        $cartItem->update(['quantity' => $newQuantity]);
+      }
+      else {
+        $cartItem = CartItem::create([
+          'cart_id' => $cart->id,
+          'product_id' => $product->id,
+          'quantity' => $request->quantity,
+          'price' => $product->price_inr,
+        ]);
       }
 
-      $cartItem->update([
-        'quantity' => $newQuantity,
-      ]);
+      DB::commit();
     }
-    else {
-      // Create new cart item
-      $cartItem = CartItem::create([
-        'cart_id' => $cart->id,
-        'product_id' => $product->id,
-        'quantity' => $request->quantity,
-        'price' => $product->price_inr, // Default to INR, can be changed based on user preference
-      ]);
+    catch (\Exception $e) {
+      DB::rollBack();
+      return response()->json(['message' => $e->getMessage()], 400);
     }
 
     $cart->load(['items.product']);

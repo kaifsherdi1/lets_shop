@@ -30,41 +30,53 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/auth/logout', [LoginController::class , 'logout']);
   Route::get('/auth/me', [LoginController::class , 'me']);
 
-  // Categories (Admin only)
-  Route::post('/categories', [CategoryController::class , 'store']);
-  Route::put('/categories/{category}', [CategoryController::class , 'update']);
-  Route::delete('/categories/{category}', [CategoryController::class , 'destroy']);
+  // Categories (Admin/Manager only for destructive actions)
+  Route::middleware('role:admin,manager')->group(function () {
+      Route::post('/categories', [CategoryController::class , 'store']);
+      Route::put('/categories/{category}', [CategoryController::class , 'update']);
+      Route::delete('/categories/{category}', [CategoryController::class , 'destroy']);
+    }
+    );
 
-  // Products
-  Route::post('/products', [ProductController::class , 'store']);
-  Route::put('/products/{product}', [ProductController::class , 'update']);
-  Route::delete('/products/{product}', [ProductController::class , 'destroy']);
-  Route::get('/my-products', [ProductController::class , 'myProducts']);
+    // Products (Admin/Manager/Distributor/Agent)
+    Route::middleware('role:admin,manager,distributor,agent')->group(function () {
+      Route::post('/products', [ProductController::class , 'store']);
+      Route::put('/products/{product}', [ProductController::class , 'update']);
+      Route::delete('/products/{product}', [ProductController::class , 'destroy']);
+      Route::get('/my-products', [ProductController::class , 'myProducts']);
+    }
+    );
 
-  // Cart
-  Route::get('/cart', [CartController::class , 'index']);
-  Route::post('/cart/items', [CartController::class , 'addItem']);
-  Route::put('/cart/items/{cartItem}', [CartController::class , 'updateItem']);
-  Route::delete('/cart/items/{cartItem}', [CartController::class , 'removeItem']);
-  Route::delete('/cart/clear', [CartController::class , 'clear']);
+    // Cart (All authenticated users)
+    Route::get('/cart', [CartController::class , 'index']);
+    Route::post('/cart/items', [CartController::class , 'addItem']);
+    Route::put('/cart/items/{cartItem}', [CartController::class , 'updateItem']);
+    Route::delete('/cart/items/{cartItem}', [CartController::class , 'removeItem']);
+    Route::delete('/cart/clear', [CartController::class , 'clear']);
 
-  // Orders
-  Route::get('/orders', [OrderController::class , 'index']);
-  Route::post('/orders', [OrderController::class , 'store']);
-  Route::get('/orders/{order}', [OrderController::class , 'show']);
-  Route::post('/orders/{order}/cancel', [OrderController::class , 'cancel']);
+    // Orders
+    Route::get('/orders', [OrderController::class , 'index']);
+    Route::post('/orders', [OrderController::class , 'store']);
+    Route::get('/orders/{order}', [OrderController::class , 'show']);
+    Route::post('/orders/{order}/cancel', [OrderController::class , 'cancel']);
 
-  // Commissions
-  Route::get('/commissions', [CommissionController::class , 'index']); // Admin/Accountant
-  Route::get('/my-commissions', [CommissionController::class , 'myCommissions']); // Distributor/Agent
-  Route::post('/commissions/{commission}/approve', [CommissionController::class , 'approve']); // Admin/Accountant
-  Route::post('/commissions/bulk-approve', [CommissionController::class , 'bulkApprove']); // Admin/Accountant
+    // Commissions
+    Route::middleware('role:admin,accountant')->group(function () {
+      Route::get('/commissions', [CommissionController::class , 'index']);
+      Route::post('/commissions/{commission}/approve', [CommissionController::class , 'approve']);
+      Route::post('/commissions/bulk-approve', [CommissionController::class , 'bulkApprove']);
+    }
+    );
+    Route::get('/my-commissions', [CommissionController::class , 'myCommissions'])->middleware('role:distributor,agent');
 
-  // Wallet
-  Route::get('/wallet', [WalletController::class , 'index']);
-  Route::post('/wallet/withdraw', [WalletController::class , 'requestWithdrawal']);
-  Route::get('/my-withdrawals', [WalletController::class , 'myWithdrawals']);
-  Route::get('/withdrawals', [WalletController::class , 'allWithdrawals']); // Admin/Accountant
-  Route::post('/withdrawals/{withdrawalRequest}/approve', [WalletController::class , 'approveWithdrawal']); // Admin/Accountant
-  Route::post('/withdrawals/{withdrawalRequest}/reject', [WalletController::class , 'rejectWithdrawal']); // Admin/Accountant
-});
+    // Wallet
+    Route::get('/wallet', [WalletController::class , 'index']);
+    Route::post('/wallet/withdraw', [WalletController::class , 'requestWithdrawal']);
+    Route::get('/my-withdrawals', [WalletController::class , 'myWithdrawals']);
+
+    Route::middleware('role:admin,accountant')->group(function () {
+      Route::get('/withdrawals', [WalletController::class , 'allWithdrawals']);
+      Route::post('/withdrawals/{withdrawalRequest}/approve', [WalletController::class , 'approveWithdrawal']);
+      Route::post('/withdrawals/{withdrawalRequest}/reject', [WalletController::class , 'rejectWithdrawal']);
+    }
+    );  });

@@ -3,18 +3,22 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    protected $categoryService;
+
+    public function __construct(CategoryService $categoryService)
+    {
+        $this->categoryService = $categoryService;
+    }
+
     public function index()
     {
-        $categories = Category::with('parent')
-            ->active()
-            ->rootCategories()
-            ->get();
+        $categories = $this->categoryService->getRootCategories(['parent']);
 
         return response()->json([
             'categories' => $categories
@@ -30,14 +34,11 @@ class CategoryController extends Controller
             'image' => 'nullable|string',
         ]);
 
-        $category = Category::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'parent_id' => $request->parent_id,
-            'description' => $request->description,
-            'image' => $request->image,
-            'status' => 'active',
-        ]);
+        $data = $request->all();
+        $data['slug'] = Str::slug($request->name);
+        $data['status'] = 'active';
+
+        $category = $this->categoryService->createCategory($data);
 
         return response()->json([
             'message' => 'Category created successfully',
@@ -45,16 +46,16 @@ class CategoryController extends Controller
         ], 201);
     }
 
-    public function show(Category $category)
+    public function show($id)
     {
-        $category->load(['parent', 'children', 'products']);
+        $category = $this->categoryService->getCategoryById($id, ['parent', 'children', 'products']);
 
         return response()->json([
             'category' => $category
         ]);
     }
 
-    public function update(Request $request, Category $category)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -64,24 +65,21 @@ class CategoryController extends Controller
             'status' => 'in:active,inactive',
         ]);
 
-        $category->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'parent_id' => $request->parent_id,
-            'description' => $request->description,
-            'image' => $request->image,
-            'status' => $request->status ?? $category->status,
-        ]);
+        $data = $request->all();
+        if ($request->has('name')) {
+            $data['slug'] = Str::slug($request->name);
+        }
+
+        $this->categoryService->updateCategory($id, $data);
 
         return response()->json([
-            'message' => 'Category updated successfully',
-            'category' => $category
+            'message' => 'Category updated successfully'
         ]);
     }
 
-    public function destroy(Category $category)
+    public function destroy($id)
     {
-        $category->delete();
+        $this->categoryService->deleteCategory($id);
 
         return response()->json([
             'message' => 'Category deleted successfully'
