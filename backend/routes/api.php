@@ -2,6 +2,7 @@
 
 
 use App\Http\Controllers\Api\Auth\LoginController;
+use App\Http\Controllers\Api\Auth\OtpController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::post('/auth/register', [RegisterController::class , 'register']);
 Route::post('/auth/login', [LoginController::class , 'login']);
+Route::post('/auth/verify-otp', [OtpController::class , 'verify']);
+Route::post('/auth/resend-otp', [OtpController::class , 'resend']);
 
 // Public product routes
 Route::get('/categories', [CategoryController::class , 'index']);
