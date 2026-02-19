@@ -79,4 +79,5 @@ Route::middleware('auth:sanctum')->group(function () {
       Route::post('/withdrawals/{withdrawalRequest}/approve', [WalletController::class , 'approveWithdrawal']);
       Route::post('/withdrawals/{withdrawalRequest}/reject', [WalletController::class , 'rejectWithdrawal']);
     }
-    );  });
+    );
+  });
