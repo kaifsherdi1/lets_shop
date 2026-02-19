@@ -20,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+
+        \Illuminate\Support\Facades\Route::prefix('api')
+            ->middleware('api')
+            ->group(base_path('routes/api.php'));
     }
 
     protected function configureRateLimiting(): void

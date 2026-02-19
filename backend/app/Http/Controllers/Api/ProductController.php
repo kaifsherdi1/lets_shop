@@ -24,30 +24,23 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\StoreProductRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'sku' => 'required|string|unique:products',
-            'price_inr' => 'required|numeric|min:0',
-            'price_aed' => 'required|numeric|min:0',
-            'distributor_price_inr' => 'required|numeric|min:0',
-            'distributor_price_aed' => 'required|numeric|min:0',
-            'commission_amount_inr' => 'required|numeric|min:0',
-            'commission_amount_aed' => 'required|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
-            'images' => 'nullable|array',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
-            'meta_keywords' => 'nullable|string',
-        ]);
+        $data = $request->validated();
 
-        $data = $request->all();
+        // Handle images if uploaded
+        if ($request->hasFile('images')) {
+            $imagePaths = [];
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('products', 'public');
+                $imagePaths[] = asset('storage/' . $path);
+            }
+            $data['images'] = $imagePaths;
+        }
+
         $data['slug'] = Str::slug($request->name);
         $data['distributor_id'] = $request->user()->id;
-        $data['status'] = 'active';
+        $data['status'] = $data['status'] ?? 'active';
 
         $product = $this->productService->createProduct($data);
 
