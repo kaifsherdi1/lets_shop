@@ -1,49 +1,134 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Custom base styles */
-@layer base {
-  * {
-    @apply box-border;
-  }
+/* =========================================================
+   Template CSS — exact Charitics design
+   ========================================================= */
+@import "./assets/icon/flaticon_charitics.css";
+@import "./assets/css/template.css";
 
-  body {
-    @apply m-0 font-sans antialiased bg-gray-50 text-gray-900;
-  }
+@theme {
+  --color-primary-50: #fff9f4;
+  --color-primary-100: #ffe9c8;
+  --color-primary-500: #EB5310;
+  --color-primary-600: #d44b0e;
+  --color-primary-700: #b83c0b;
+}
 
-  #root {
-    @apply w-full min-h-screen;
+/* ============================================================
+   Expert UI Foundations & Responsiveness
+   ============================================================ */
+:root {
+  --ul-primary: #EB5310;
+  --ul-black: #13191d;
+  --ul-gray: #717171;
+  --ul-gray2: #e0e0e0;
+  --ul-gray3: #f5f5f5;
+  --ul-c3: #F0F0F0;
+  --ul-c4: #F9F9F9;
+  --ul-gradient: linear-gradient(135deg, #EB5310 0%, #ff7a45 100%);
+  --font-quicksand: 'Quicksand', sans-serif;
+  --font-primary: 'Manrope', sans-serif;
+
+  /* Fluid Typography */
+  --fs-h1: clamp(2.5rem, 5vw + 1rem, 4rem);
+  --fs-h2: clamp(1.8rem, 4vw + 1rem, 3rem);
+  --fs-h3: clamp(1.4rem, 3vw + 1rem, 2.2rem);
+  --fs-body: clamp(0.95rem, 1vw + 0.5rem, 1.1rem);
+}
+
+html {
+  overflow-x: hidden !important;
+  scroll-behavior: smooth;
+}
+
+body {
+  position: static !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  font-family: var(--font-primary);
+  color: var(--ul-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Container Adjustments */
+@media (max-width: 576px) {
+  .ul-container {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
   }
 }
 
-/* Custom component styles */
-@layer components {
-  .container {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
+/* Responsive Grid / Stacking Utilities */
+.ul-stack-reverse-mobile {
+  display: flex;
+  flex-direction: column;
+}
 
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+@media (min-width: 992px) {
+  .ul-stack-reverse-mobile {
+    flex-direction: row;
   }
+}
 
-  .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800;
-  }
+/* Typography Overrides for Expert Feel */
+.ul-banner-title {
+  font-size: var(--fs-h1) !important;
+  line-height: 1.1 !important;
+}
 
-  .btn-secondary {
-    @apply bg-secondary-600 text-white hover:bg-secondary-700 active:bg-secondary-800;
-  }
+.ul-section-title {
+  font-size: var(--fs-h2) !important;
+  line-height: 1.2 !important;
+}
 
-  .btn-outline {
-    @apply border-2 border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100;
-  }
+.ul-breadcrumb-title {
+  font-size: var(--fs-h2) !important;
+}
 
-  .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+/* Responsive Spacing Utility */
+@media (max-width: 768px) {
+  .ul-section-spacing {
+    padding-top: 60px !important;
+    padding-bottom: 60px !important;
   }
+}
 
-  .card {
-    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
-  }
+/* Ensure images are responsive */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+/* Template sidebar — react-controlled via class toggling */
+.ul-sidebar {
+  z-index: 9999;
+}
+
+/* Slider track — hide scrollbar */
+.slider-track::-webkit-scrollbar {
+  display: none;
+}
+
+.slider-track {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Template preloader — hide in React */
+.preloader {
+  display: none !important;
 }

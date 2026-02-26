@@ -28,4 +28,16 @@ export const authAPI = {
     const response = await axios.get('/auth/me');
     return response.data;
   },
+
+  // Verify OTP
+  verifyOtp: async (data) => {
+    const response = await axios.post('/auth/verify-otp', data);
+    return response.data;
+  },
+
+  // Resend OTP
+  resendOtp: async (data) => {
+    const response = await axios.post('/auth/resend-otp', data);
+    return response.data;
+  },
 };

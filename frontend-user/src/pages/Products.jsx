@@ -1,149 +1,147 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams, useOutletContext } from 'react-router-dom';
+import PageBanner from '../components/layout/PageBanner';
+import ProductCard from '../components/product/ProductCard';
 import { productAPI } from '../api/products';
-import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { formatCurrency, getStoredCurrency } from '../utils/currency';
-import Header from '../components/layout/Header';
-import './Products.css';
+import { useCart } from '../context/CartContext';
+import toast from 'react-hot-toast';
 
-const Products = () => {
+export default function Products() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currency, setCurrency] = useState(getStoredCurrency());
-  const [filters, setFilters] = useState({
-    search: '',
-    category_id: '',
-  });
-
-  const { addToCart } = useCart();
+  const [search, setSearch] = useState('');
+  const { currency } = useOutletContext() || { currency: 'AED' };
   const { isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    fetchCategories();
-    fetchProducts();
-  }, [filters]);
-
-  const fetchCategories = async () => {
-    try {
-      const data = await productAPI.getCategories();
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-    }
-  };
-
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const params = {};
-      if (filters.search) params.search = filters.search;
-      if (filters.category_id) params.category_id = filters.category_id;
-
-      const data = await productAPI.getProducts(params);
-      setProducts(data.data || []);
-    } catch (error) {
-      console.error('Failed to fetch products:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { addToCart } = useCart();
 
   const handleAddToCart = async (productId) => {
     if (!isAuthenticated) {
-      alert('Please login to add items to cart');
+      toast.error('Please login to add to cart');
       return;
     }
-
     try {
       await addToCart(productId, 1);
-      alert('Product added to cart!');
+      toast.success('Added to cart!');
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to add to cart');
+      toast.error('Failed to add to cart');
     }
   };
 
+  const activeCat = searchParams.get('category') || '';
+
+  useEffect(() => {
+    productAPI.getCategories()
+      .then(d => {
+        // Handle { categories: [...] } or { data: [...] } or [...] 
+        const cats = d.categories || d.data || (Array.isArray(d) ? d : []);
+        setCategories(cats);
+      })
+      .catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    const params = {};
+    if (activeCat) params.category_id = activeCat;
+    if (search) params.search = search;
+
+    productAPI.getProducts(params)
+      .then(d => setProducts(d.data || d || []))
+      .catch(() => setProducts([]))
+      .finally(() => setLoading(false));
+  }, [activeCat, search]);
+
   return (
-    <div>
-      <Header currency={currency} setCurrency={setCurrency} />
+    <main>
+      <PageBanner title="Our Products" crumbs={[{ label: 'Products' }]} />
 
-      <div className="container">
-        <h1 className="page-title">All Products</h1>
+      <section className="ul-section-spacing">
+        <div className="ul-container">
+          {/* Search + Filter bar */}
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '40px', alignItems: 'center', background: 'var(--ul-c4)', padding: '24px', borderRadius: '16px' }}>
+            <div style={{ flex: '1 1 300px', position: 'relative' }}>
+               <i className="flaticon-search" style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'var(--ul-gray)' }}></i>
+               <input
+                type="search"
+                placeholder="Search products by name..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{
+                  width: '100%', padding: '14px 20px 14px 48px',
+                  borderRadius: '12px', border: '1.5px solid var(--ul-gray2)',
+                  fontSize: '0.95rem', outline: 'none', background: '#fff',
+                  fontFamily: 'var(--font-primary)',
+                  transition: 'all 0.3s ease',
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--ul-primary)'}
+                onBlur={e => e.target.style.borderColor = 'var(--ul-gray2)'}
+              />
+            </div>
 
-        <div className="filters-section">
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="search-input"
-          />
-
-          <select
-            value={filters.category_id}
-            onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
-            className="category-select"
-          >
-            <option value="">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {loading ? (
-          <div className="loading">Loading products...</div>
-        ) : products.length === 0 ? (
-          <div className="no-products">No products found</div>
-        ) : (
-          <div className="product-grid">
-            {products.map((product) => (
-              <div key={product.id} className="product-card">
-                <div className="product-image">
-                  {product.images?.[0] ? (
-                    <img src={product.images[0]} alt={product.name} />
-                  ) : (
-                    <div className="no-image">No Image</div>
-                  )}
-                </div>
-                <div className="product-info">
-                  <h3>{product.name}</h3>
-                  <p className="product-price">
-                    {formatCurrency(
-                      currency === 'INR' ? product.price_inr : product.price_aed,
-                      currency
-                    )}
-                  </p>
-                  <p className="stock-status">
-                    {product.stock_quantity > 0 ? (
-                      <span className="in-stock">In Stock ({product.stock_quantity})</span>
-                    ) : (
-                      <span className="out-of-stock">Out of Stock</span>
-                    )}
-                  </p>
-                  <div className="product-actions">
-                    <Link to={`/products/${product.id}`} className="btn-secondary">
-                      View Details
-                    </Link>
-                    <button
-                      onClick={() => handleAddToCart(product.id)}
-                      className="btn-primary"
-                      disabled={product.stock_quantity === 0}
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setSearchParams({})}
+                style={{
+                  padding: '10px 22px', borderRadius: '999px',
+                  background: !activeCat ? 'var(--ul-primary)' : '#fff',
+                  color: !activeCat ? '#fff' : 'var(--ul-gray)',
+                  border: '1.5px solid',
+                  borderColor: !activeCat ? 'var(--ul-primary)' : 'var(--ul-gray2)',
+                  fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+              >All</button>
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSearchParams({ category: cat.id })}
+                  style={{
+                    padding: '10px 22px', borderRadius: '999px',
+                    background: activeCat === String(cat.id) ? 'var(--ul-primary)' : '#fff',
+                    color: activeCat === String(cat.id) ? '#fff' : 'var(--ul-gray)',
+                    border: '1.5px solid',
+                    borderColor: activeCat === String(cat.id) ? 'var(--ul-primary)' : 'var(--ul-gray2)',
+                    fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                >{cat.name}</button>
+              ))}
+            </div>
           </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
-export default Products;
+          {/* Products Grid */}
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '100px 0' }}>
+               <div style={{ width: '50px', height: '50px', margin: '0 auto 16px', border: '4px solid var(--ul-c3)', borderTopColor: 'var(--ul-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+               <p style={{ color: 'var(--ul-gray)', fontWeight: 600 }}>Loading latest products...</p>
+            </div>
+          ) : products.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '120px 20px', background: 'var(--ul-c4)', borderRadius: '24px' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🔍</div>
+              <h3 style={{ fontFamily: 'var(--font-quicksand)', fontWeight: 800, color: 'var(--ul-black)', marginBottom: '12px' }}>No items found matching your search.</h3>
+              <p style={{ color: 'var(--ul-gray)' }}>Try adjusting your filters or category.</p>
+              <button onClick={() => { setSearch(''); setSearchParams({}); }} className="ul-btn" style={{ marginTop: '24px' }}>Clear All Filters</button>
+            </div>
+          ) : (
+            <div className="row row-cols-lg-4 row-cols-md-3 row-cols-2 row-cols-xxs-1 ul-bs-row">
+              {products.map(product => (
+                <div className="col" key={product.id}>
+                  <ProductCard
+                    product={product}
+                    currency={currency}
+                    onAddToCart={handleAddToCart}
+                    isAuthenticated={isAuthenticated}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}

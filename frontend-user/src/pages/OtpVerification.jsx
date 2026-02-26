@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import AuthLayout from '../components/AuthLayout';
-import api from '../utils/api';
+import { authAPI } from '../api/auth';
 import toast from 'react-hot-toast';
 
 const OtpVerification = () => {
@@ -22,18 +21,23 @@ const OtpVerification = () => {
 
   useEffect(() => {
     if (timer > 0) {
-      const interval = setInterval(() => setTimer(timer - 1), 1000);
+      const interval = setInterval(() => setTimer(t => t - 1), 1000);
       return () => clearInterval(interval);
     }
   }, [timer]);
 
   const handleChange = (element, index) => {
-    if (isNaN(element.value)) return false;
-    setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
-
-    // Focus next input
+    if (isNaN(element.value)) return;
+    const newOtp = [...otp.map((d, idx) => (idx === index ? element.value : d))];
+    setOtp(newOtp);
     if (element.nextSibling && element.value) {
       element.nextSibling.focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      e.target.previousSibling?.focus();
     }
   };
 
@@ -41,15 +45,9 @@ const OtpVerification = () => {
     e.preventDefault();
     setIsLoading(true);
     const code = otp.join('');
-
     try {
-      const response = await api.post('/auth/verify-otp', {
-        email,
-        code,
-        type: 'registration'
-      });
-
-      toast.success(response.data.message);
+      await authAPI.verifyOtp({ email, code, type: 'registration' });
+      toast.success('Email verified successfully!');
       navigate('/login');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Verification failed');
@@ -60,66 +58,88 @@ const OtpVerification = () => {
 
   const handleResend = async () => {
     if (timer > 0) return;
-
     try {
-      const response = await api.post('/auth/resend-otp', {
-        email,
-        type: 'registration'
-      });
-      toast.success(response.data.message);
+      await authAPI.resendOtp({ email, type: 'registration' });
+      toast.success('New OTP sent to your email');
       setTimer(60);
     } catch (error) {
       toast.error('Failed to resend OTP');
     }
   };
 
+  const otpFilled = otp.join('').length === 6;
+
   return (
-    <AuthLayout title="Verify Your Email" subtitle={`We've sent a 6-digit code to ${email}`}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <form onSubmit={handleVerify} className="space-y-6">
-          <div className="flex justify-between gap-2">
-            {otp.map((data, index) => (
-              <input
-                key={index}
-                type="text"
-                maxLength="1"
-                className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:outline-none bg-white transition-all"
-                value={data}
-                onChange={(e) => handleChange(e.target, index)}
-                onFocus={(e) => e.target.select()}
-              />
-            ))}
-          </div>
+    <AuthLayout
+      title="Verify Your Email"
+      subtitle={`We've sent a 6-digit code to ${email}`}
+    >
+      <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: '28px', alignItems: 'center' }}>
+        {/* OTP Boxes */}
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+          {otp.map((data, index) => (
+            <input
+              key={index}
+              type="text"
+              maxLength="1"
+              value={data}
+              onChange={e => handleChange(e.target, index)}
+              onKeyDown={e => handleKeyDown(e, index)}
+              onFocus={e => e.target.select()}
+              style={{
+                width: '48px', height: '56px', textAlign: 'center',
+                fontSize: '1.4rem', fontWeight: 800,
+                border: `2px solid ${data ? 'var(--ul-primary)' : 'var(--ul-gray2)'}`,
+                borderRadius: '12px', outline: 'none',
+                background: data ? 'var(--ul-c4)' : '#fff',
+                color: 'var(--ul-black)',
+                transition: 'all 0.3s ease',
+                fontFamily: 'var(--font-primary)',
+              }}
+            />
+          ))}
+        </div>
 
-          <button
-            type="submit"
-            disabled={isLoading || otp.join('').length < 6}
-            className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {isLoading ? 'Verifying...' : 'Verify OTP'}
-          </button>
+        {/* Timer */}
+        <div style={{ textAlign: 'center' }}>
+          {timer > 0 ? (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              background: 'var(--ul-c4)', padding: '8px 20px', borderRadius: '999px',
+              color: 'var(--ul-gray)', fontSize: '0.88rem', fontWeight: 600,
+            }}>
+              ⏳ Resend code in <strong style={{ color: 'var(--ul-primary)' }}>{timer}s</strong>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleResend}
+              style={{
+                background: 'none', cursor: 'pointer',
+                color: 'var(--ul-primary)', fontWeight: 700, fontSize: '0.9rem',
+                padding: '8px 16px', borderRadius: '999px',
+                border: '1.5px solid var(--ul-primary)',
+              }}
+            >
+              Resend OTP
+            </button>
+          )}
+        </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              {timer > 0 ? (
-                `Resend code in ${timer}s`
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  className="text-indigo-600 hover:text-indigo-500 font-medium"
-                >
-                  Resend OTP
-                </button>
-              )}
-            </p>
-          </div>
-        </form>
-      </motion.div>
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isLoading || !otpFilled}
+          className="ul-btn"
+          style={{
+            width: '100%', height: '52px', fontSize: '1rem', justifyContent: 'center',
+            opacity: (isLoading || !otpFilled) ? 0.6 : 1,
+            cursor: (isLoading || !otpFilled) ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {isLoading ? 'Verifying...' : 'Verify Email →'}
+        </button>
+      </form>
     </AuthLayout>
   );
 };
