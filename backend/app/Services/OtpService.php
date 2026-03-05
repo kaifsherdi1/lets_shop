@@ -25,10 +25,17 @@ class OtpService
     OtpVerification::create([
       'user_id' => $userId,
       'email' => $email,
-      'code' => $code, // In production, hash this code
+      'code' => $code,
       'type' => $type,
       'expires_at' => Carbon::now()->addMinutes(10),
     ]);
+
+    // Send email (fail silently — never block registration)
+    try {
+      \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\OtpMail($code, $email));
+    } catch (\Exception $e) {
+      \Illuminate\Support\Facades\Log::warning('OTP email failed: ' . $e->getMessage());
+    }
 
     return $code;
   }

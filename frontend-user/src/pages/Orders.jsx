@@ -27,7 +27,9 @@ const Orders = () => {
   const fetchOrders = async () => {
     try {
       const data = await orderAPI.getOrders();
-      setOrders(data.data || []);
+      // Handle paginated: { data: [...] } or flat array
+      const rawOrders = data.data?.data || data.data || data || [];
+      setOrders(Array.isArray(rawOrders) ? rawOrders : []);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {
@@ -75,7 +77,8 @@ const Orders = () => {
           ) : (
             <div style={{ maxWidth: '820px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {orders.map(order => {
-                const st = statusConfig[order.status] || statusConfig.pending;
+                const statusKey = order.status || order.order_status || 'pending';
+                const st = statusConfig[statusKey] || statusConfig.pending;
                 const isExpanded = expandedOrders[order.id];
                 return (
                   <div key={order.id} style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
@@ -121,10 +124,10 @@ const Orders = () => {
                         {order.payment_method?.toUpperCase()}
                       </span>
                       <span style={{ fontSize: '0.82rem', color: 'var(--ul-gray)' }}>
-                        <strong style={{ color: 'var(--ul-black)' }}>Status: </strong>
-                        {order.payment_status}
+                          <strong style={{ color: 'var(--ul-black)' }}>Payment: </strong>
+                        {(order.payment_status || 'pending').toUpperCase()}
                       </span>
-                      {order.status === 'pending' && (
+                      {(order.order_status === 'pending') && ( // Use order_status for cancel condition
                         <button
                           onClick={() => handleCancelOrder(order.id)}
                           style={{

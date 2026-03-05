@@ -24,9 +24,11 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'address_id' => 'required|exists:addresses,id',
+            'delivery_address' => 'required|string|min:10',
+            'recipient_name' => 'nullable|string|max:255',
+            'recipient_phone' => 'nullable|string|max:20',
             'currency' => 'required|in:INR,AED',
-            'payment_method' => 'required|in:cod,online,emi',
+            'payment_method' => 'required|in:cod,bank_transfer,online',
             'notes' => 'nullable|string',
         ]);
 
@@ -37,8 +39,7 @@ class OrderController extends Controller
                 'message' => 'Order placed successfully',
                 'order' => $order,
             ], 201);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage() ?: 'Failed to place order',
             ], $e->getCode() ?: 400);
@@ -53,8 +54,7 @@ class OrderController extends Controller
             return response()->json([
                 'order' => $order
             ]);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage(),
             ], $e->getCode() ?: 404);
@@ -70,8 +70,7 @@ class OrderController extends Controller
                 'message' => 'Order cancelled successfully',
                 'order' => $order,
             ]);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage(),
             ], $e->getCode() ?: 400);

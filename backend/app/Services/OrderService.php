@@ -6,6 +6,7 @@ use App\Repositories\OrderRepository;
 use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Exception;
 
 class OrderService
@@ -51,51 +52,62 @@ class OrderService
 
     return DB::transaction(function () use ($userId, $data, $cart) {
       // Calculate totals
+      $currency = $data['currency'] ?? 'AED';
       $subtotal = 0;
       foreach ($cart->items as $item) {
-        $price = $data['currency'] === 'INR'
+        $price = $currency === 'INR'
           ? $item->product->price_inr
           : $item->product->price_aed;
         $subtotal += $price * $item->quantity;
       }
 
       $tax = $subtotal * 0.05;
-      $shippingFee = 50;
+      $shippingFee = 0; // Free shipping
       $total = $subtotal + $tax + $shippingFee;
 
-      // Create order
-      $order = $this->orderRepository->create([
+      // Create order — support both delivery_address (free text) and address_id (FK)
+      $orderData = [
         'order_number' => \App\Models\Order::generateOrderNumber(),
         'user_id' => $userId,
-        'address_id' => $data['address_id'],
-        'currency' => $data['currency'],
+        'currency' => $currency,
         'subtotal' => $subtotal,
         'tax' => $tax,
         'shipping_fee' => $shippingFee,
         'total' => $total,
+        'total_amount' => $total,
         'payment_method' => $data['payment_method'],
         'payment_status' => 'pending',
         'order_status' => 'pending',
+        'status' => 'pending',
         'notes' => $data['notes'] ?? null,
-      ]);
+        'delivery_address' => $data['delivery_address'] ?? null,
+        'recipient_name' => $data['recipient_name'] ?? null,
+        'recipient_phone' => $data['recipient_phone'] ?? null,
+      ];
 
-      // Create order items and reduce stock with atomic locks
+      // If an address_id was provided (saved addresses), use it
+      if (!empty($data['address_id'])) {
+        $orderData['address_id'] = $data['address_id'];
+      }
+
+      $order = $this->orderRepository->create($orderData);
+
+      // Create order items and reduce stock
       foreach ($cart->items as $item) {
         $lock = \Illuminate\Support\Facades\Cache::lock('product_stock_' . $item->product_id, 10);
 
         try {
-          $lock->block(5); // Wait up to 5 seconds for the lock
+          $lock->block(5);
 
-          // Refresh product stock data within the lock
           $product = \App\Models\Product::findOrFail($item->product_id);
 
           if ($product->stock_quantity < $item->quantity) {
             throw new Exception("Product {$product->name} just went out of stock.", 400);
           }
 
-          $price = $data['currency'] === 'INR' ? $product->price_inr : $product->price_aed;
-          $distributorPrice = $data['currency'] === 'INR' ? $product->distributor_price_inr : $product->distributor_price_aed;
-          $commissionAmount = $data['currency'] === 'INR' ? $product->commission_amount_inr : $product->commission_amount_aed;
+          $price = $currency === 'INR' ? $product->price_inr : $product->price_aed;
+          $distributorPrice = $currency === 'INR' ? $product->distributor_price_inr : $product->distributor_price_aed;
+          $commissionAmount = $currency === 'INR' ? $product->commission_amount_inr : $product->commission_amount_aed;
 
           OrderItem::create([
             'order_id' => $order->id,
@@ -110,15 +122,27 @@ class OrderService
 
           $product->decreaseStock($item->quantity);
 
-        }
-        finally {
+        } finally {
           optional($lock)->release();
         }
       }
 
+      // Clear cart
       $cart->items()->delete();
 
-      return $order->load(['items.product', 'address']);
+      $order->load(['items.product']);
+
+      // Send order confirmation email (silently — don't fail order on email failure)
+      try {
+        $user = \App\Models\User::find($userId);
+        if ($user) {
+          Mail::to($user->email)->send(new \App\Mail\OrderConfirmationMail($order, $user));
+        }
+      } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Order confirmation email failed: ' . $e->getMessage());
+      }
+
+      return $order;
     });
   }
 
@@ -130,8 +154,8 @@ class OrderService
       throw new Exception('Unauthorized', 403);
     }
 
-    if ($order->order_status !== 'pending') {
-      throw new Exception('Order cannot be cancelled', 400);
+    if (!in_array($order->order_status, ['pending', 'processing'])) {
+      throw new Exception('Order cannot be cancelled at this stage', 400);
     }
 
     return DB::transaction(function () use ($order) {
@@ -139,7 +163,7 @@ class OrderService
         $item->product->increaseStock($item->quantity);
       }
 
-      $order->update(['order_status' => 'cancelled']);
+      $order->update(['order_status' => 'cancelled', 'status' => 'cancelled']);
       return $order;
     });
   }

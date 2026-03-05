@@ -51,6 +51,20 @@ const ProductDetail = () => {
     }
   };
 
+  const handleBuyNow = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to purchase');
+      navigate('/login');
+      return;
+    }
+    try {
+      await addToCart(product.id, quantity);
+      navigate('/checkout');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add to cart');
+    }
+  };
+
   if (loading) {
     return (
       <MainLayout>
@@ -212,22 +226,26 @@ const ProductDetail = () => {
                     <div style={{ display: 'flex', gap: '14px' }}>
                       <button
                         onClick={handleAddToCart}
+                        className="ul-btn ul-btn--outline"
+                        style={{
+                          flex: 1, height: '52px', fontSize: '1rem',
+                          border: '2px solid var(--ul-primary)', background: 'transparent',
+                          color: 'var(--ul-primary)',
+                        }}
+                      >
+                        🛒 Add to Cart
+                      </button>
+                      <button
+                        onClick={handleBuyNow}
                         className="ul-btn"
                         style={{ flex: 1, height: '52px', fontSize: '1rem' }}
                       >
-                        Add to Cart
+                        ⚡ Buy Now
                       </button>
-                      <Link
-                        to="/cart"
-                        style={{
-                          flex: 1, height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          border: '2px solid var(--ul-primary)', borderRadius: '999px',
-                          color: 'var(--ul-primary)', fontWeight: 700, fontSize: '1rem',
-                        }}
-                      >
-                        View Cart
-                      </Link>
                     </div>
+                    <p style={{ textAlign: 'center', marginTop: '14px', color: 'var(--ul-gray)', fontSize: '0.82rem' }}>
+                      🔒 Secure checkout — Free shipping included
+                    </p>
                   </div>
                 )}
               </div>

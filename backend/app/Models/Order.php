@@ -10,14 +10,19 @@ class Order extends Model
         'order_number',
         'user_id',
         'address_id',
+        'delivery_address',
+        'recipient_name',
+        'recipient_phone',
         'currency',
         'subtotal',
         'tax',
         'shipping_fee',
         'total',
+        'total_amount',
         'payment_method',
         'payment_status',
         'order_status',
+        'status',
         'notes',
     ];
 
@@ -28,6 +33,7 @@ class Order extends Model
             'tax' => 'decimal:2',
             'shipping_fee' => 'decimal:2',
             'total' => 'decimal:2',
+            'total_amount' => 'decimal:2',
         ];
     }
 
@@ -61,10 +67,9 @@ class Order extends Model
             ->first();
 
         if ($lastOrder) {
-            $lastNumber = (int)substr($lastOrder->order_number, 6);
+            $lastNumber = (int) substr($lastOrder->order_number, 6);
             $newNumber = $lastNumber + 1;
-        }
-        else {
+        } else {
             $newNumber = 1;
         }
 
