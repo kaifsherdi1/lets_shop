@@ -40,9 +40,14 @@ const Register = () => {
     }
     setLoading(true);
     try {
-      await register(formData);
+      const response = await register(formData);
       toast.success('Account created! Please verify your email.');
-      navigate('/verify-otp', { state: { email: formData.email } });
+      navigate('/verify-otp', { 
+        state: { 
+          email: formData.email,
+          debugOtp: response?.debug_otp 
+        } 
+      });
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {

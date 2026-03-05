@@ -11,49 +11,32 @@ export default function PromoBanner() {
       <div className="ul-container">
         <div className="ul-donate-form-wrapper" style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', alignItems: 'center' }}>
           {/* Form Side */}
-          <div className="ul-donate-form-box" style={{ flex: '1 1 450px', background: 'var(--ul-primary)', borderRadius: '32px', padding: '40px', boxShadow: '0 20px 60px rgba(235, 83, 16, 0.2)' }}>
-            <span className="ul-section-sub-title" style={{ color: '#fff', opacity: 0.9 }}>Value Deals</span>
-            <h3 className="ul-donate-form-title" style={{ color: '#fff', fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 800, marginBottom: '30px' }}>Select Your Shopping Credit</h3>
+           <div className="ul-donate-form-box" style={{ flex: '1 1 450px', background: 'var(--ul-primary)', borderRadius: '32px', padding: '40px', boxShadow: '0 20px 60px rgba(235, 83, 16, 0.2)' }}>
+            <span className="ul-section-sub-title" style={{ color: '#fff', opacity: 0.9 }}>Value Plus</span>
+            <h3 className="ul-donate-form-title" style={{ color: '#fff', fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 800, marginBottom: '30px' }}>Exclusive Membership Benefits</h3>
 
-            <form onSubmit={e => e.preventDefault()} className="ul-donate-form ul-form">
-              <div className="ul-donate-form-amounts" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '12px', marginBottom: '25px' }}>
-                {['25', '50', '100', '200'].map(val => (
-                  <button
-                    key={val}
-                    type="button"
-                    className={amount === val ? 'active' : ''}
-                    onClick={() => { setAmount(val); setCustom(''); }}
-                    style={{
-                      background: amount === val ? '#fff' : 'rgba(255,255,255,0.1)',
-                      color: amount === val ? 'var(--ul-primary)' : '#fff',
-                      border: 'none', padding: '12px', borderRadius: '12px',
-                      fontWeight: 700, transition: 'all 0.3s ease',
-                    }}
-                  >
-                    {currency} {val}
-                  </button>
-                ))}
-              </div>
-
-              <div className="ul-donate-form-custom" style={{ marginBottom: '30px' }}>
-                <label style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px' }}>Or enter custom amount</label>
-                <div className="form-input-wrapper" style={{ position: 'relative' }}>
-                  <span className="currency-symbol" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: 'var(--ul-primary)' }}>{currency}</span>
-                  <input
-                    type="number"
-                    placeholder="Enter custom value"
-                    value={custom}
-                    onChange={e => { setCustom(e.target.value); setAmount(''); }}
-                    min="1"
-                    style={{ width: '100%', padding: '14px 16px 14px 60px', borderRadius: '14px', border: 'none', fontSize: '1rem', color: 'var(--ul-black)', fontWeight: 700 }}
-                  />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {[
+                { icon: 'flaticon-delivery-truck', title: 'Free Global Shipping', desc: 'On orders over $100' },
+                { icon: 'flaticon-love', title: '24/7 Priority Support', desc: 'Dedicated customer care' },
+                { icon: 'flaticon-shield', title: 'Secure Payments', desc: 'Fully encrypted transactions' },
+                { icon: 'flaticon-back', title: '30-Day Returns', desc: 'Hassle-free money back' }
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#fff' }}>
+                    <i className={item.icon}></i>
+                  </div>
+                  <div>
+                    <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, margin: 0 }}>{item.title}</h4>
+                    <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', margin: 0 }}>{item.desc}</p>
+                  </div>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              <Link to="/products" className="ul-btn" style={{ width: '100%', background: 'var(--ul-black)', color: '#fff', justifyContent: 'center', height: '56px' }}>
-                <i className="flaticon-fast-forward-double-right-arrows-symbol"></i> Claim This Credit
-              </Link>
-            </form>
+            <Link to="/register" className="ul-btn" style={{ width: '100%', background: 'var(--ul-black)', color: '#fff', justifyContent: 'center', height: '56px', marginTop: '30px' }}>
+              <i className="flaticon-fast-forward-double-right-arrows-symbol"></i> Join The Club
+            </Link>
           </div>
 
           {/* Text Side */}

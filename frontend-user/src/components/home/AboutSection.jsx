@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const aboutImg = '/assets/images/about-img.png';
-const aboutVector1 = '/assets/images/about-img-vector-1.svg';
-const aboutVector2 = '/assets/images/about-img-vector-2.svg';
-const aboutBlockImg = '/assets/images/about-block-img.jpg';
-const aboutBgVector = '/assets/img/about-vector-1.png';
+import aboutImg from '../../assets/images/about-img.png';
+import aboutVector1 from '../../assets/images/about-img-vector-1.svg';
+import aboutVector2 from '../../assets/images/about-img-vector-2.svg';
+import aboutBlockImg from '../../assets/images/about-block-img.jpg';
+import aboutBgVector from '../../assets/images/about-vector-1.png';
 
 export default function AboutSection() {
   return (

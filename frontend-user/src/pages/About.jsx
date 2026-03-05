@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
 import PageBanner from '../components/layout/PageBanner';
 
-const aboutImg = '/assets/images/about-img.png';
-const aboutBlockImg = '/assets/images/about-block-img.jpg';
-const aboutVector1 = '/assets/images/about-img-vector-1.svg';
-const aboutVector2 = '/assets/images/about-img-vector-2.svg';
-const team1 = '/assets/images/member-1.jpg';
-const team2 = '/assets/images/member-2.jpg';
-const team3 = '/assets/images/member-3.jpg';
-const team4 = '/assets/images/member-4.jpg';
-const ctaBg = '/assets/img/cta-bg.jpg';
-const whyJoin = '/assets/images/why-join.jpg';
+import aboutImg from '../assets/images/about-img.png';
+const aboutBlockImg = 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=600';
+import aboutVector1 from '../assets/images/about-img-vector-1.svg';
+import aboutVector2 from '../assets/images/about-img-vector-2.svg';
+const ctaBg = 'https://images.unsplash.com/photo-1557821552-17105176677c?auto=format&fit=crop&q=80&w=1200';
+const whyJoin = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=600';
 
 const TEAM = [
-  { id: 1, img: team1, name: 'David Wilson', role: 'Founder & CEO' },
-  { id: 2, img: team2, name: 'Sarah Johnson', role: 'Head of Operations' },
-  { id: 3, img: team3, name: 'Michael Chen', role: 'Lead Developer' },
-  { id: 4, img: team4, name: 'Emma Williams', role: 'Customer Experience' },
+  { id: 1, img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300', name: 'David Wilson', role: 'Founder & CEO' },
+  { id: 2, img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300', name: 'Sarah Johnson', role: 'Head of Operations' },
+  { id: 3, img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300', name: 'Michael Chen', role: 'Lead Developer' },
+  { id: 4, img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300', name: 'Emma Williams', role: 'Customer Experience' },
 ];
 
 const TABS = ['Mission', 'Vision', 'History'];

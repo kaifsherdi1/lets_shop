@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import bannerImg from '../../assets/img/banner-img.png';
-import vectorImg from '../../assets/img/vector-img.png';
-import bannerVector1 from '../../assets/img/banner-img-vector-1.png';
-import bannerVector2 from '../../assets/img/banner-img-vector-2.png';
-import user1 from '../../assets/img/user-1.png';
-import user2 from '../../assets/img/user-2.png';
-import user3 from '../../assets/img/user-3.png';
+import bannerImg from '../../assets/images/banner-img.png';
+import vectorImg from '../../assets/images/vector-img.png';
+import bannerVector1 from '../../assets/images/banner-img-vector-1.png';
+import bannerVector2 from '../../assets/images/banner-img-vector-2.png';
+import user1 from '../../assets/images/user-1.png';
+import user2 from '../../assets/images/user-2.png';
+import user3 from '../../assets/images/user-3.png';
 
 export default function Hero() {
   return (

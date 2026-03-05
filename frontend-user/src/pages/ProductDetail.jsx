@@ -7,6 +7,7 @@ import { formatCurrency } from '../utils/currency';
 import MainLayout from '../components/layout/MainLayout';
 import PageBanner from '../components/layout/PageBanner';
 import toast from 'react-hot-toast';
+import { resolveProductImage } from '../utils/image';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -106,7 +107,7 @@ const ProductDetail = () => {
               }}>
                 {product.images?.[0] ? (
                   <img
-                    src={product.images[0]}
+                    src={resolveProductImage(product.images[0])}
                     alt={product.name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />

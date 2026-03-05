@@ -26,16 +26,19 @@ const AuthLayout = ({ title, subtitle, children }) => {
         pointerEvents: 'none',
       }} />
 
-      <div style={{
-        width: '100%',
-        maxWidth: '460px',
-        background: '#fff',
-        borderRadius: '20px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
-        padding: 'clamp(32px, 5vw, 48px)',
-        position: 'relative',
-        zIndex: 1,
-      }}>
+      <div 
+        className="glass-effect"
+        style={{
+          width: '100%',
+          maxWidth: '460px',
+          borderRadius: '24px',
+          boxShadow: '0 40px 100px rgba(0,0,0,0.1)',
+          padding: 'clamp(32px, 5vw, 48px)',
+          position: 'relative',
+          zIndex: 1,
+          border: '1px solid rgba(255,255,255,0.4)',
+        }}
+      >
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>

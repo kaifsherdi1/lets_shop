@@ -39,6 +39,15 @@ class OtpController extends Controller
       ], 400);
     }
 
+    // If verification is for registration, mark user as verified
+    if ($request->type === 'registration') {
+      $user = \App\Models\User::where('email', $request->email)->first();
+      if ($user) {
+        $user->email_verified_at = now();
+        $user->save();
+      }
+    }
+
     return response()->json([
       'message' => 'OTP verified successfully.',
       'verified' => true

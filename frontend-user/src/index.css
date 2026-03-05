@@ -113,6 +113,38 @@ a {
   transition: color 0.3s ease;
 }
 
+/* Selection Color */
+::selection {
+  background: var(--ul-primary);
+  color: #fff;
+}
+
+/* Glassmorphism Utilities */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ul-gray3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ul-primary);
+}
+
 /* Template sidebar — react-controlled via class toggling */
 .ul-sidebar {
   z-index: 9999;

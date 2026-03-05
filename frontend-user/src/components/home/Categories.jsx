@@ -3,20 +3,20 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { productAPI } from '../../api/products';
 
-const event1 = '/assets/images/donation-1.jpg';
-const event2 = '/assets/images/donation-2.jpg';
-const event3 = '/assets/images/donation-3.jpg';
-const event4 = '/assets/images/donation-4.jpg';
-const eventBg = '/assets/img/donations-bg.png';
+import electronicsImg from '../../assets/images/category-electronics.png';
+import fashionImg from '../../assets/images/category-fashion.png';
+import homeImg from '../../assets/images/category-home.png';
+import sportsImg from '../../assets/images/category-sports.png';
+import eventBg from '../../assets/images/donations-bg.png';
 
 const FALLBACK_CATEGORIES = [
-  { id: 1, name: 'Electronics', description: 'Gadgets, phones, laptops and more', image: event1 },
-  { id: 2, name: 'Clothing', description: 'Fashion for men, women and kids', image: event2 },
-  { id: 3, name: 'Home & Kitchen', description: 'Everything for your home', image: event3 },
-  { id: 4, name: 'Sports', description: 'Gear up for your active lifestyle', image: event4 },
+  { id: 1, name: 'Electronics', slug: 'electronics', description: 'Gadgets, phones, laptops and more', image: electronicsImg },
+  { id: 2, name: 'Fashion', slug: 'fashion', description: 'Fashion for men, women and kids', image: fashionImg },
+  { id: 3, name: 'Home & Kitchen', slug: 'home-kitchen', description: 'Everything for your home', image: homeImg },
+  { id: 4, name: 'Sports', slug: 'sports-outdoors', description: 'Gear up for your active lifestyle', image: sportsImg },
 ];
 
-const IMG_FALLBACKS = [event1, event2, event3, event4];
+const IMG_FALLBACKS = [electronicsImg, fashionImg, homeImg, sportsImg];
 
 export default function Categories() {
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
@@ -25,10 +25,17 @@ export default function Categories() {
     productAPI.getCategories()
       .then(data => {
         const rawCats = data.categories || data.data || (Array.isArray(data) ? data : []);
-        const cats = rawCats.slice(0, 4).map((c, i) => ({
-          ...c,
-          image: IMG_FALLBACKS[i % IMG_FALLBACKS.length],
-        }));
+        const cats = rawCats.slice(0, 4).map((c) => {
+          let image = IMG_FALLBACKS[0];
+          const name = (c.name || '').toLowerCase();
+          const slug = (c.slug || '').toLowerCase();
+          
+          if (name.includes('fashion') || slug.includes('fashion')) image = fashionImg;
+          else if (name.includes('home') || slug.includes('kitchen') || slug.includes('home')) image = homeImg;
+          else if (name.includes('sports') || slug.includes('sports')) image = sportsImg;
+          
+          return { ...c, image };
+        });
         if (cats.length > 0) setCategories(cats);
       })
       .catch(() => {});

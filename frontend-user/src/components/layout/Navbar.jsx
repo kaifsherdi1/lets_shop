@@ -5,7 +5,8 @@ import { useCart } from '../../context/CartContext';
 import { getStoredCurrency, setStoredCurrency } from '../../utils/currency';
 
 // Template images
-import logoSvg from '../../assets/img/logo.svg';
+import logoSvg from '../../assets/images/logo.svg';
+import logoIcon from '../../assets/images/logo-icon.png';
 
 const CATEGORIES = [
   { id: 1, name: 'Electronics', slug: 'electronics' },
@@ -185,7 +186,9 @@ export default function Navbar() {
                     background: 'var(--ul-primary)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '1rem',
-                  }}>🛍️</span>
+                  }}>
+                    <img src={logoIcon} alt="Logo" style={{ width: '20px', height: '20px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+                  </span>
                   <span style={{
                     fontFamily: 'var(--font-quicksand)', fontWeight: 800,
                     fontSize: '1.1rem', color: 'var(--ul-black)',

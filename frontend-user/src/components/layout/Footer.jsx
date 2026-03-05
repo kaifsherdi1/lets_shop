@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const blogImg1 = '/assets/images/blog-1.jpg';
-const blogImg2 = '/assets/images/blog-2.jpg';
-const footerVector = '/assets/images/footer-vector-img.png';
+import blogImg1 from '../../assets/images/blog-1.jpg';
+import blogImg2 from '../../assets/images/blog-2.jpg';
+import footerVector from '../../assets/images/footer-vector-img.png';
+import logoIcon from '../../assets/images/logo-icon.png';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -62,8 +63,15 @@ export default function Footer() {
         <div className="ul-footer-container">
           <div className="ul-footer-middle-wrapper" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '50px' }}>
             <div className="ul-footer-about">
-              <Link to="/" style={{ display: 'inline-block', marginBottom: '25px' }}>
-                <span style={{ fontFamily: 'var(--font-quicksand)', fontWeight: 800, fontSize: '1.8rem', color: '#fff' }}>
+              <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                <span style={{
+                  width: '35px', height: '35px', borderRadius: '50%',
+                  background: 'var(--ul-primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <img src={logoIcon} alt="Logo" style={{ width: '22px', height: '22px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+                </span>
+                <span style={{ fontFamily: 'var(--font-quicksand)', fontWeight: 800, fontSize: '1.6rem', color: '#fff', letterSpacing: '-0.02em' }}>
                   Lets<span style={{ color: 'var(--ul-primary)' }}>Shop</span>
                 </span>
               </Link>

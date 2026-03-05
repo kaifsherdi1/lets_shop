@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '../../utils/currency';
+import { resolveProductImage } from '../../utils/image';
 
 /**
  * ProductCard — styled to closely match the Charitics template donation card:
@@ -35,7 +36,7 @@ const ProductCard = ({ product, currency, onAddToCart, isAuthenticated }) => {
       <div style={{ position: 'relative', paddingTop: '62%', background: '#e9edf0', overflow: 'hidden' }}>
         {product.images?.[0] ? (
           <img
-            src={product.images[0]}
+            src={resolveProductImage(product.images[0])}
             alt={product.name}
             style={{
               position: 'absolute', inset: 0, width: '100%', height: '100%',

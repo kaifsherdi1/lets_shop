@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-const testimonialAvatar1 = '/assets/images/member-1.jpg';
-const testimonialAvatar2 = '/assets/images/member-2.jpg';
-const testimonialAvatar3 = '/assets/images/member-3.jpg';
-const testimonialAvatar4 = '/assets/images/member-4.jpg';
+import testimonialAvatar1 from '../../assets/images/user-1.png';
+import testimonialAvatar2 from '../../assets/images/user-2.png';
+import testimonialAvatar3 from '../../assets/images/user-3.png';
+import testimonialAvatar4 from '../../assets/images/user-4.png';
 
 const TESTIMONIALS = [
   {

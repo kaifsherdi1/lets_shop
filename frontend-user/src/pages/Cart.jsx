@@ -5,6 +5,7 @@ import { formatCurrency } from '../utils/currency';
 import MainLayout from '../components/layout/MainLayout';
 import PageBanner from '../components/layout/PageBanner';
 import toast from 'react-hot-toast';
+import { resolveProductImage } from '../utils/image';
 
 const Cart = () => {
   const { cart, loading, updateCartItem, removeFromCart } = useCart();
@@ -88,7 +89,7 @@ const Cart = () => {
                         {/* Image */}
                         <div style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'var(--ul-gray3)', flexShrink: 0, overflow: 'hidden' }}>
                           {item.product?.images?.[0] ? (
-                            <img src={item.product.images[0]} alt={item.product?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={resolveProductImage(item.product.images[0])} alt={item.product?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🛍️</div>
                           )}

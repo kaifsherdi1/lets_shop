@@ -12,6 +12,14 @@ const OtpVerification = () => {
   const location = useLocation();
   const email = location.state?.email || '';
 
+  const debugOtp = location.state?.debugOtp || '';
+
+  useEffect(() => {
+    if (debugOtp) {
+      toast(`Debug OTP: ${debugOtp}`, { icon: '🔑', duration: 5000 });
+    }
+  }, [debugOtp]);
+
   useEffect(() => {
     if (!email) {
       toast.error('Email not found. Please register again.');
@@ -25,6 +33,12 @@ const OtpVerification = () => {
       return () => clearInterval(interval);
     }
   }, [timer]);
+
+  const autoFillDebug = () => {
+    if (debugOtp) {
+      setOtp(debugOtp.split(''));
+    }
+  };
 
   const handleChange = (element, index) => {
     if (isNaN(element.value)) return;
@@ -139,6 +153,20 @@ const OtpVerification = () => {
         >
           {isLoading ? 'Verifying...' : 'Verify Email →'}
         </button>
+
+        {debugOtp && (
+          <button 
+            type="button" 
+            onClick={autoFillDebug}
+            style={{ 
+              marginTop: '-10px', background: 'none', border: 'none', 
+              color: 'var(--ul-gray)', fontSize: '0.8rem', cursor: 'pointer',
+              textDecoration: 'underline'
+            }}
+          >
+            Auto-fill Debug OTP
+          </button>
+        )}
       </form>
     </AuthLayout>
   );

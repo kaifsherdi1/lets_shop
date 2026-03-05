@@ -6,9 +6,9 @@ import { useCart } from '../../context/CartContext';
 import ProductCard from '../product/ProductCard';
 import toast from 'react-hot-toast';
 
-import user1 from '../../assets/img/user-1.png';
-import user2 from '../../assets/img/user-2.png';
-import user3 from '../../assets/img/user-3.png';
+import user1 from '../../assets/images/user-1.png';
+import user2 from '../../assets/images/user-2.png';
+import user3 from '../../assets/images/user-3.png';
 
 export default function FeaturedProducts() {
   const [products, setProducts] = useState([]);
