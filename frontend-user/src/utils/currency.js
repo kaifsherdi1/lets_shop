@@ -1,4 +1,4 @@
-export const formatCurrency = (amount, currency = 'INR') => {
+export const formatCurrency = (amount, currency = 'AED') => {
   const symbols = {
     INR: '₹',
     AED: 'د.إ',
@@ -14,7 +14,7 @@ export const formatCurrency = (amount, currency = 'INR') => {
 };
 
 export const getStoredCurrency = () => {
-  return localStorage.getItem('currency') || 'INR';
+  return localStorage.getItem('currency') || 'AED';
 };
 
 export const setStoredCurrency = (currency) => {

@@ -26,6 +26,9 @@ export default function Categories() {
       .then(data => {
         const rawCats = data.categories || data.data || (Array.isArray(data) ? data : []);
         const cats = rawCats.slice(0, 4).map((c) => {
+          // Prioritize image from DB
+          if (c.image && c.image.startsWith('http')) return c;
+
           let image = IMG_FALLBACKS[0];
           const name = (c.name || '').toLowerCase();
           const slug = (c.slug || '').toLowerCase();
@@ -46,7 +49,7 @@ export default function Categories() {
       <div className="ul-container">
         <div className="ul-section-heading justify-content-center text-center" style={{ marginBottom: '50px' }}>
           <div>
-            <span className="ul-section-sub-title" style={{ background: 'rgba(235, 83, 16, 0.08)', color: 'var(--ul-primary)', padding: '6px 16px', borderRadius: '999px', display: 'inline-block', marginBottom: '12px' }}>
+            <span className="ul-section-sub-title" style={{ background: 'rgba(118, 176, 171, 0.08)', color: 'var(--ul-primary)', padding: '6px 16px', borderRadius: '999px', display: 'inline-block', marginBottom: '12px' }}>
               Explore
             </span>
             <h2 className="ul-section-title">Shop By Category</h2>

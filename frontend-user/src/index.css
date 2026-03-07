@@ -7,25 +7,25 @@
 @import "./assets/css/template.css";
 
 @theme {
-  --color-primary-50: #fff9f4;
-  --color-primary-100: #ffe9c8;
-  --color-primary-500: #EB5310;
-  --color-primary-600: #d44b0e;
-  --color-primary-700: #b83c0b;
+  --color-primary-50: #f0f7f6;
+  --color-primary-100: #d1e6e4;
+  --color-primary-500: #76b0ab;
+  --color-primary-600: #5f948f;
+  --color-primary-700: #4a7571;
 }
 
 /* ============================================================
    Expert UI Foundations & Responsiveness
    ============================================================ */
 :root {
-  --ul-primary: #EB5310;
+  --ul-primary: #76b0ab;
   --ul-black: #13191d;
   --ul-gray: #717171;
   --ul-gray2: #e0e0e0;
   --ul-gray3: #f5f5f5;
   --ul-c3: #F0F0F0;
   --ul-c4: #F9F9F9;
-  --ul-gradient: linear-gradient(135deg, #EB5310 0%, #ff7a45 100%);
+  --ul-gradient: linear-gradient(135deg, #76b0ab 0%, #a2ccc8 100%);
   --font-quicksand: 'Quicksand', sans-serif;
   --font-primary: 'Manrope', sans-serif;
 

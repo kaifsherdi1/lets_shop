@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import aboutImg from '../../assets/images/about-img.png';
 import aboutVector1 from '../../assets/images/about-img-vector-1.svg';
 import aboutVector2 from '../../assets/images/about-img-vector-2.svg';
-import aboutBlockImg from '../../assets/images/about-block-img.jpg';
 import aboutBgVector from '../../assets/images/about-vector-1.png';
+import qualityBadge from '../../assets/images/quality-badge.png';
 
 export default function AboutSection() {
   return (
@@ -38,7 +38,7 @@ export default function AboutSection() {
               <div className="ul-about-block" style={{ background: '#fff', padding: '24px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                 <div className="block-left" style={{ flex: '1 1 250px' }}>
                   <div className="block-heading">
-                    <div className="icon" style={{ background: 'rgba(235, 83, 16, 0.1)', color: 'var(--ul-primary)' }}>
+                    <div className="icon" style={{ background: 'rgba(118, 176, 171, 0.1)', color: 'var(--ul-primary)' }}>
                       <i className="flaticon-love"></i>
                     </div>
                     <h3 className="block-title">Quality Guaranteed</h3>
@@ -48,8 +48,8 @@ export default function AboutSection() {
                     <li>Easy returns & refunds</li>
                   </ul>
                 </div>
-                <div className="block-right d-none d-sm-block" style={{ flex: '0 0 120px' }}>
-                  <img src={aboutBlockImg} alt="" style={{ borderRadius: '12px', width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div className="block-right d-none d-sm-block" style={{ flex: '0 0 160px', height: 'auto', display: 'flex', alignItems: 'center' }}>
+                  <img src={qualityBadge} alt="Quality Guarantee" style={{ borderRadius: '8px', width: '100%', height: 'auto', objectFit: 'contain' }} />
                 </div>
               </div>
 

@@ -47,7 +47,7 @@ export default function FeaturedProducts() {
       <div className="ul-container">
         <div className="ul-section-heading ul-donations-heading d-flex flex-wrap align-items-end justify-content-between gy-4" style={{ marginBottom: '40px' }}>
           <div className="left">
-            <span className="ul-section-sub-title" style={{ background: 'rgba(235, 83, 16, 0.08)', color: 'var(--ul-primary)', padding: '6px 16px', borderRadius: '999px', display: 'inline-block', marginBottom: '12px' }}>
+            <span className="ul-section-sub-title" style={{ background: 'rgba(118, 176, 171, 0.08)', color: 'var(--ul-primary)', padding: '6px 16px', borderRadius: '999px', display: 'inline-block', marginBottom: '12px' }}>
               Our Selection
             </span>
             <h2 className="ul-section-title">Featured Products</h2>
@@ -64,9 +64,13 @@ export default function FeaturedProducts() {
              </div>
           </div>
 
-          <div className="ul-slider-nav ul-donations-slider-nav d-none d-sm-flex">
-            <button className="prev" onClick={() => scroll('left')} aria-label="Previous"><i className="flaticon-back"></i></button>
-            <button className="next" onClick={() => scroll('right')} aria-label="Next"><i className="flaticon-next"></i></button>
+          <div className="ul-slider-nav ul-donations-slider-nav d-none d-sm-flex" style={{ visibility: 'visible', gap: '10px' }}>
+            <button className="prev" onClick={() => scroll('left')} aria-label="Previous" style={{ pointerEvents: 'auto', cursor: 'pointer', background: 'var(--ul-primary)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className="flaticon-back"></i>
+            </button>
+            <button className="next" onClick={() => scroll('right')} aria-label="Next" style={{ pointerEvents: 'auto', cursor: 'pointer', background: 'var(--ul-primary)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className="flaticon-next"></i>
+            </button>
           </div>
         </div>
       </div>

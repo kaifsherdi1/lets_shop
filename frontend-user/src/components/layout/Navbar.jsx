@@ -10,11 +10,11 @@ import logoIcon from '../../assets/images/logo-icon.png';
 
 const CATEGORIES = [
   { id: 1, name: 'Electronics', slug: 'electronics' },
-  { id: 2, name: 'Clothing', slug: 'clothing' },
+  { id: 2, name: 'Fashion', slug: 'fashion' },
   { id: 3, name: 'Home & Kitchen', slug: 'home-kitchen' },
-  { id: 4, name: 'Books', slug: 'books' },
-  { id: 5, name: 'Sports', slug: 'sports' },
-  { id: 6, name: 'Beauty', slug: 'beauty' },
+  { id: 4, name: 'Books', slug: 'books-stationery' },
+  { id: 5, name: 'Sports', slug: 'sports-outdoors' },
+  { id: 6, name: 'Beauty', slug: 'beauty-personal-care' },
 ];
 
 export default function Navbar() {
@@ -257,9 +257,9 @@ export default function Navbar() {
                   onClick={() => handleCurrency('AED')}
                   style={{
                     background: currency === 'AED' ? 'var(--ul-primary)' : 'transparent',
-                    color: currency === 'AED' ? '#fff' : 'inherit',
+                    color: '#fff',
                     border: '1px solid',
-                    borderColor: currency === 'AED' ? 'var(--ul-primary)' : 'rgba(0,0,0,0.15)',
+                    borderColor: currency === 'AED' ? 'var(--ul-primary)' : 'rgba(255,255,255,0.3)',
                     borderRadius: '4px', padding: '3px 8px', fontSize: '0.78rem',
                     fontWeight: 700, cursor: 'pointer',
                   }}
@@ -268,30 +268,28 @@ export default function Navbar() {
                   onClick={() => handleCurrency('INR')}
                   style={{
                     background: currency === 'INR' ? 'var(--ul-primary)' : 'transparent',
-                    color: currency === 'INR' ? '#fff' : 'inherit',
+                    color: '#fff',
                     border: '1px solid',
-                    borderColor: currency === 'INR' ? 'var(--ul-primary)' : 'rgba(0,0,0,0.15)',
+                    borderColor: currency === 'INR' ? 'var(--ul-primary)' : 'rgba(255,255,255,0.3)',
                     borderRadius: '4px', padding: '3px 8px', fontSize: '0.78rem',
                     fontWeight: 700, cursor: 'pointer',
                   }}
                 >INR</button>
               </div>
 
-              {/* Cart Icon */}
-              {user && (
-                <Link to="/cart" style={{ position: 'relative', marginRight: '12px', fontSize: '1.3rem', color: 'var(--ul-black)' }}>
-                  <i className="flaticon-shopping-cart"></i>
-                  {totalItems > 0 && (
-                    <span style={{
-                      position: 'absolute', top: '-8px', right: '-10px',
-                      background: 'var(--ul-primary)', color: '#fff',
-                      borderRadius: '50%', width: '18px', height: '18px',
-                      fontSize: '0.65rem', fontWeight: 800,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>{totalItems}</span>
-                  )}
-                </Link>
-              )}
+              {/* Cart Icon — show for all, count for logged users */}
+              <Link to="/cart" title="View Cart" style={{ position: 'relative', marginRight: '12px', fontSize: '1.3rem', color: 'var(--ul-black)' }}>
+                <i className="flaticon-shopping-cart"></i>
+                {totalItems > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '-8px', right: '-10px',
+                    background: 'var(--ul-primary)', color: '#fff',
+                    borderRadius: '50%', width: '18px', height: '18px',
+                    fontSize: '0.65rem', fontWeight: 800,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{totalItems}</span>
+                )}
+              </Link>
 
               {/* Auth buttons / User dropdown */}
               {user ? (
@@ -336,7 +334,7 @@ export default function Navbar() {
                 </div>
               ) : (
                 <div className="d-sm-flex d-none" style={{ gap: '12px', alignItems: 'center' }}>
-                  <Link to="/login" style={{ fontWeight: 700, color: 'var(--ul-black)', fontSize: '0.9rem' }}>
+                  <Link to="/login" style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>
                     Login
                   </Link>
                   <Link to="/register" style={{
@@ -344,7 +342,7 @@ export default function Navbar() {
                     background: 'var(--ul-primary)', color: '#fff',
                     fontWeight: 700, fontSize: '0.88rem',
                     padding: '8px 20px', borderRadius: '999px',
-                    boxShadow: '0 4px 14px rgba(235,83,16,0.3)',
+                    boxShadow: '0 4px 14px rgba(118,176,171,0.3)',
                   }}>
                     <i className="flaticon-fast-forward-double-right-arrows-symbol"></i>
                     Join Now

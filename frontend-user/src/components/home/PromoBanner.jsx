@@ -11,7 +11,7 @@ export default function PromoBanner() {
       <div className="ul-container">
         <div className="ul-donate-form-wrapper" style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', alignItems: 'center' }}>
           {/* Form Side */}
-           <div className="ul-donate-form-box" style={{ flex: '1 1 450px', background: 'var(--ul-primary)', borderRadius: '32px', padding: '40px', boxShadow: '0 20px 60px rgba(235, 83, 16, 0.2)' }}>
+           <div className="ul-donate-form-box" style={{ flex: '1 1 450px', background: 'var(--ul-primary)', borderRadius: '32px', padding: '40px', boxShadow: '0 20px 60px rgba(118, 176, 171, 0.2)' }}>
             <span className="ul-section-sub-title" style={{ color: '#fff', opacity: 0.9 }}>Value Plus</span>
             <h3 className="ul-donate-form-title" style={{ color: '#fff', fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 800, marginBottom: '30px' }}>Exclusive Membership Benefits</h3>
 
@@ -41,7 +41,7 @@ export default function PromoBanner() {
 
           {/* Text Side */}
           <div className="ul-donate-form-txt" style={{ flex: '1 1 400px' }}>
-            <span className="ul-section-sub-title" style={{ background: 'rgba(235, 83, 16, 0.08)', color: 'var(--ul-primary)', padding: '6px 16px', borderRadius: '999px', display: 'inline-block', marginBottom: '12px' }}>
+            <span className="ul-section-sub-title" style={{ background: 'rgba(118, 176, 171, 0.08)', color: 'var(--ul-primary)', padding: '6px 16px', borderRadius: '999px', display: 'inline-block', marginBottom: '12px' }}>
               Why Shop With Us
             </span>
             <h2 className="ul-section-title" style={{ marginBottom: '20px' }}>Premium Quality, Unbeatable Prices</h2>

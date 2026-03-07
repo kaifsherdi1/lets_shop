@@ -99,9 +99,13 @@ export default function Testimonials() {
                 </span>
                 <h2 className="ul-section-title">What Our Customers Say</h2>
               </div>
-              <div className="ul-slider-nav d-none d-sm-flex">
-                <button className="prev" onClick={prev} aria-label="Previous"><i className="flaticon-back"></i></button>
-                <button className="next" onClick={next} aria-label="Next"><i className="flaticon-next"></i></button>
+              <div className="ul-slider-nav d-none d-sm-flex" style={{ visibility: 'visible', gap: '10px' }}>
+                <button className="prev" onClick={prev} aria-label="Previous" style={{ pointerEvents: 'auto', cursor: 'pointer', background: 'var(--ul-primary)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="flaticon-back"></i>
+                </button>
+                <button className="next" onClick={next} aria-label="Next" style={{ pointerEvents: 'auto', cursor: 'pointer', background: 'var(--ul-primary)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="flaticon-next"></i>
+                </button>
               </div>
             </div>
 
