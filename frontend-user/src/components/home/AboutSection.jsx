@@ -5,7 +5,6 @@ import aboutImg from '../../assets/images/about-img.png';
 import aboutVector1 from '../../assets/images/about-img-vector-1.svg';
 import aboutVector2 from '../../assets/images/about-img-vector-2.svg';
 import aboutBgVector from '../../assets/images/about-vector-1.png';
-import qualityBadge from '../../assets/images/quality-badge.png';
 
 export default function AboutSection() {
   return (
@@ -47,9 +46,6 @@ export default function AboutSection() {
                     <li style={{ marginBottom: '8px' }}>100% authentic products</li>
                     <li>Easy returns & refunds</li>
                   </ul>
-                </div>
-                <div className="block-right d-none d-sm-block" style={{ flex: '0 0 160px', height: 'auto', display: 'flex', alignItems: 'center' }}>
-                  <img src={qualityBadge} alt="Quality Guarantee" style={{ borderRadius: '8px', width: '100%', height: 'auto', objectFit: 'contain' }} />
                 </div>
               </div>
 
