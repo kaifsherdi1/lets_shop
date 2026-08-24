@@ -1,6 +1,5 @@
 <?php
 
-
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\OtpController;
 use App\Http\Controllers\Api\Auth\RegisterController;
@@ -9,14 +8,17 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CommissionController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
-// Public routes
-Route::post('/auth/register', [RegisterController::class, 'register']);
-Route::post('/auth/login', [LoginController::class, 'login']);
-Route::post('/auth/verify-otp', [OtpController::class, 'verify']);
-Route::post('/auth/resend-otp', [OtpController::class, 'resend']);
+// Public routes — rate-limited to 10 req/min per IP (brute-force protection)
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/auth/register', [RegisterController::class, 'register']);
+    Route::post('/auth/login', [LoginController::class, 'login']);
+    Route::post('/auth/verify-otp', [OtpController::class, 'verify']);
+    Route::post('/auth/resend-otp', [OtpController::class, 'resend']);
+});
 
 // Public product routes
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -29,6 +31,11 @@ Route::middleware('auth:sanctum')->group(function () {
   // Auth
   Route::post('/auth/logout', [LoginController::class, 'logout']);
   Route::get('/auth/me', [LoginController::class, 'me']);
+
+  // User Profile (all authenticated users)
+  Route::get('/profile', [UserProfileController::class, 'show']);
+  Route::put('/profile', [UserProfileController::class, 'update']);
+  Route::post('/profile/change-password', [UserProfileController::class, 'changePassword']);
 
   // Categories (Admin/Manager only for destructive actions)
   Route::middleware('role:admin,manager')->group(
@@ -88,7 +95,18 @@ Route::middleware('auth:sanctum')->group(function () {
   // ── Admin-only routes ────────────────────────────────────────
   Route::middleware('role:admin,manager')->group(function () {
     Route::get('/admin/stats', [\App\Http\Controllers\Api\AdminController::class, 'stats']);
+    Route::get('/admin/monthly-stats', [\App\Http\Controllers\Api\AdminController::class, 'monthlyStats']);
     Route::get('/admin/users', [\App\Http\Controllers\Api\AdminController::class, 'users']);
     Route::patch('/admin/orders/{id}/status', [\App\Http\Controllers\Api\AdminController::class, 'updateOrderStatus']);
+    Route::patch('/admin/users/{id}/status', [\App\Http\Controllers\Api\AdminController::class, 'toggleUserStatus']);
+  });
+
+  // ── Distributor/Agent portal routes ──────────────────────────
+  Route::middleware('role:distributor,agent')->group(function () {
+    Route::get('/portal/stats', [\App\Http\Controllers\Api\PortalController::class, 'stats']);
+    Route::get('/portal/commissions', [CommissionController::class, 'myCommissions']);
+    Route::get('/portal/products', [ProductController::class, 'myProducts']);
+    Route::get('/portal/wallet', [WalletController::class, 'index']);
+    Route::get('/portal/withdrawals', [WalletController::class, 'myWithdrawals']);
   });
 });

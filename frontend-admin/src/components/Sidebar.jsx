@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const NAV = [
+const ADMIN_NAV = [
   {
     section: 'Main',
     items: [
@@ -27,9 +27,29 @@ const NAV = [
   },
 ];
 
+const PORTAL_NAV = [
+  {
+    section: 'My Portal',
+    items: [
+      { to: '/',            label: 'My Dashboard', icon: <IconGrid /> },
+      { to: '/portal',      label: 'My Earnings',  icon: <IconPercent /> },
+      { to: '/products',    label: 'My Products',  icon: <IconTag /> },
+    ],
+  },
+  {
+    section: 'Finance',
+    items: [
+      { to: '/commissions', label: 'Commissions',  icon: <IconPercent /> },
+      { to: '/withdrawals', label: 'My Wallet',    icon: <IconWallet /> },
+    ],
+  },
+];
+
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isPortalUser = ['distributor', 'agent'].includes(user?.role);
+  const NAV = isPortalUser ? PORTAL_NAV : ADMIN_NAV;
 
   const handleLogout = () => { logout(); navigate('/login'); };
 

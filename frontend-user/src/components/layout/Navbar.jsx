@@ -117,22 +117,6 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Services dropdown */}
-            <div style={{ padding: '0 5px' }}>
-              <button
-                onClick={() => setSideServicesOpen(v => !v)}
-                style={{ ...mobileLink, width: '100%', textAlign: 'left', background: 'rgba(255,255,255,0.03)', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                Services <i className={`flaticon-next`} style={{ fontSize: '0.8rem', transform: sideServicesOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.3s' }}></i>
-              </button>
-              {sideServicesOpen && (
-                <div style={{ paddingLeft: '15px', marginTop: '5px', display: 'flex', flexDirection: 'column', gap: '5px', borderLeft: '2px solid var(--ul-primary)' }}>
-                  <NavLink to="/services/repair" onClick={() => setSidebarOpen(false)} style={mobileSubLink}>Repair</NavLink>
-                  <NavLink to="/services/replacement" onClick={() => setSidebarOpen(false)} style={mobileSubLink}>Replacement</NavLink>
-                </div>
-              )}
-            </div>
-
             <NavLink to="/contact" onClick={() => setSidebarOpen(false)} style={mobileLink}>Contact</NavLink>
 
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '15px', paddingTop: '15px' }}>
@@ -140,6 +124,7 @@ export default function Navbar() {
                 <>
                     <NavLink to="/cart" onClick={() => setSidebarOpen(false)} style={mobileLink}>Cart ({totalItems})</NavLink>
                     <NavLink to="/orders" onClick={() => setSidebarOpen(false)} style={mobileLink}>My Orders</NavLink>
+                    <NavLink to="/profile" onClick={() => setSidebarOpen(false)} style={mobileLink}>My Profile</NavLink>
                     <button onClick={() => { handleLogout(); setSidebarOpen(false); }} style={{ ...mobileLink, background: 'rgba(231, 76, 60, 0.15)', color: '#ff6b6b', marginTop: '10px' }}>
                     Logout
                     </button>
@@ -228,21 +213,6 @@ export default function Navbar() {
                     </div>
                   </div>
 
-                  {/* Services dropdown */}
-                  <div
-                    className="has-sub-menu"
-                    onMouseEnter={() => setServicesOpen(true)}
-                    onMouseLeave={() => setServicesOpen(false)}
-                  >
-                    <a role="button" style={{ cursor: 'pointer' }}>Services</a>
-                    <div className="ul-header-submenu" style={{ display: servicesOpen ? 'block' : '' }}>
-                      <ul>
-                        <li><Link to="/services/repair">Repair</Link></li>
-                        <li><Link to="/services/replacement">Replacement</Link></li>
-                      </ul>
-                    </div>
-                  </div>
-
                   {/* Contact */}
                   <NavLink to="/contact" className={({ isActive }) => isActive ? 'active' : ''}>Contact</NavLink>
                 </nav>
@@ -318,6 +288,9 @@ export default function Navbar() {
                       </div>
                       <Link to="/orders" onClick={() => setDropdownOpen(false)} style={{ display: 'block', padding: '10px 16px', fontSize: '0.9rem', color: 'var(--ul-black)', fontWeight: 600 }}>
                         <i className="flaticon-list" style={{ marginRight: '8px', color: 'var(--ul-primary)' }}></i>My Orders
+                      </Link>
+                      <Link to="/profile" onClick={() => setDropdownOpen(false)} style={{ display: 'block', padding: '10px 16px', fontSize: '0.9rem', color: 'var(--ul-black)', fontWeight: 600 }}>
+                        <i className="flaticon-user" style={{ marginRight: '8px', color: 'var(--ul-primary)' }}></i>My Profile
                       </Link>
                       <Link to="/cart" onClick={() => setDropdownOpen(false)} style={{ display: 'block', padding: '10px 16px', fontSize: '0.9rem', color: 'var(--ul-black)', fontWeight: 600 }}>
                         <i className="flaticon-shopping-cart" style={{ marginRight: '8px', color: 'var(--ul-primary)' }}></i>My Cart

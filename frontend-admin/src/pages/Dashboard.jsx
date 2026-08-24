@@ -19,9 +19,11 @@ const MOCK_CHART = [
 ];
 
 export default function Dashboard() {
-  const [stats, setStats]     = useState({ total_users: 0, total_products: 0, total_orders: 0, total_revenue: 0 });
-  const [orders, setOrders]   = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats]         = useState({ total_users: 0, total_products: 0, total_orders: 0, total_revenue: 0 });
+  const [orders, setOrders]       = useState([]);
+  const [chartData, setChartData] = useState([]);
+  const [isRealData, setIsRealData] = useState(false);
+  const [loading, setLoading]     = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -30,8 +32,18 @@ export default function Dashboard() {
         const raw = r.data?.data?.data || r.data?.data || r.data || [];
         setOrders(Array.isArray(raw) ? raw.slice(0, 6) : []);
       }).catch(() => {}),
+      // Real monthly stats for charts
+      axios.get('/admin/monthly-stats').then(r => {
+        if (Array.isArray(r.data) && r.data.length > 0) {
+          setChartData(r.data);
+          setIsRealData(true);
+        } else {
+          setChartData(MOCK_CHART);
+        }
+      }).catch(() => setChartData(MOCK_CHART)),
     ]).finally(() => setLoading(false));
   }, []);
+
 
   const STATUS_BADGE = {
     pending:    <span className="badge badge-yellow">⏳ Pending</span>,
@@ -65,16 +77,16 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Charts Row */}
       <div className="grid-2" style={{ marginBottom: 24 }}>
         <div className="card">
           <div className="card-header">
             <div className="card-title">Monthly Orders</div>
+            {!isRealData && <span style={{ fontSize: '0.72rem', color: '#9ab5b3', fontStyle: 'italic' }}>Sample data</span>}
           </div>
           <div className="card-body">
             <div className="chart-wrap">
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={MOCK_CHART}>
+                <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f4f3" />
                   <XAxis dataKey="name" tick={{ fill: '#9ab5b3', fontSize: 12 }} />
                   <YAxis tick={{ fill: '#9ab5b3', fontSize: 12 }} />
@@ -88,11 +100,12 @@ export default function Dashboard() {
         <div className="card">
           <div className="card-header">
             <div className="card-title">Revenue Trend (AED)</div>
+            {!isRealData && <span style={{ fontSize: '0.72rem', color: '#9ab5b3', fontStyle: 'italic' }}>Sample data</span>}
           </div>
           <div className="card-body">
             <div className="chart-wrap">
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={MOCK_CHART}>
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f4f3" />
                   <XAxis dataKey="name" tick={{ fill: '#9ab5b3', fontSize: 12 }} />
                   <YAxis tick={{ fill: '#9ab5b3', fontSize: 12 }} />

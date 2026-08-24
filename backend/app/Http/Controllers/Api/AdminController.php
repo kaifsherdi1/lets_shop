@@ -29,12 +29,38 @@ class AdminController extends Controller
       ->get();
 
     return response()->json([
-      'total_users' => $totalUsers,
+      'total_users'    => $totalUsers,
       'total_products' => $totalProducts,
-      'total_orders' => $totalOrders,
-      'total_revenue' => round($totalRevenue, 2),
-      'recent_orders' => $recentOrders,
+      'total_orders'   => $totalOrders,
+      'total_revenue'  => round($totalRevenue, 2),
+      'recent_orders'  => $recentOrders,
     ]);
+  }
+
+  /**
+   * GET /api/admin/monthly-stats
+   * Real monthly order + revenue data for dashboard charts (last 6 months)
+   */
+  public function monthlyStats()
+  {
+    $months = collect(range(5, 0))->map(function ($i) {
+      $date = now()->subMonths($i);
+      $start = $date->copy()->startOfMonth();
+      $end   = $date->copy()->endOfMonth();
+
+      $orders = Order::whereBetween('created_at', [$start, $end])->count();
+      $revenue = Order::whereBetween('created_at', [$start, $end])
+        ->whereNotIn('order_status', ['cancelled'])
+        ->sum(DB::raw('COALESCE(total_amount, total, 0)'));
+
+      return [
+        'name'    => $date->format('M'),
+        'orders'  => $orders,
+        'revenue' => round($revenue, 2),
+      ];
+    });
+
+    return response()->json($months);
   }
 
   /**
@@ -83,7 +109,31 @@ class AdminController extends Controller
 
     return response()->json([
       'message' => 'Order status updated',
-      'order' => $order,
+      'order'   => $order,
+    ]);
+  }
+
+  /**
+   * PATCH /api/admin/users/{id}/status
+   * Toggle a user's active/inactive status
+   */
+  public function toggleUserStatus(Request $request, $id)
+  {
+    $request->validate([
+      'status' => 'required|in:active,inactive,suspended',
+    ]);
+
+    $user = User::findOrFail($id);
+    $user->update(['status' => $request->status]);
+
+    return response()->json([
+      'message' => 'User status updated to ' . $request->status,
+      'user'    => [
+        'id'     => $user->id,
+        'name'   => $user->name,
+        'email'  => $user->email,
+        'status' => $user->status,
+      ],
     ]);
   }
 }

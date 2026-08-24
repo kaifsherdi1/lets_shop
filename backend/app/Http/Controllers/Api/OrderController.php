@@ -17,7 +17,15 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
-        $orders = $this->orderService->getUserOrders($request->user()->id, 20);
+        // If user is admin or manager, return ALL orders. Otherwise, return only their own.
+        if ($request->user()->isAdmin() || $request->user()->hasRole('manager')) {
+            $orders = \App\Models\Order::with(['items.product', 'user'])
+                ->orderBy('created_at', 'desc')
+                ->paginate($request->get('per_page', 20));
+        } else {
+            $orders = $this->orderService->getUserOrders($request->user()->id, 20);
+        }
+        
         return response()->json($orders);
     }
 

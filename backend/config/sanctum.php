@@ -47,7 +47,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Tokens expire after 7 days (10080 minutes) — prevents session hijacking from stolen tokens
+    'expiration' => env('SANCTUM_TOKEN_EXPIRY', 10080),
 
     /*
     |--------------------------------------------------------------------------

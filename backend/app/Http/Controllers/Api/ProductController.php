@@ -63,32 +63,44 @@ class ProductController extends Controller
     {
         $product = $this->productService->getProductById($id);
 
-        // Check if user owns this product
+        // Strict ownership check — distributor can only edit their own products
         if ($product->distributor_id !== $request->user()->id && !$request->user()->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'price_inr' => 'required|numeric|min:0',
-            'price_aed' => 'required|numeric|min:0',
-            'distributor_price_inr' => 'required|numeric|min:0',
-            'distributor_price_aed' => 'required|numeric|min:0',
-            'commission_amount_inr' => 'required|numeric|min:0',
-            'commission_amount_aed' => 'required|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
-            'images' => 'nullable|array',
-            'status' => 'in:active,inactive,out_of_stock',
+        $validated = $request->validate([
+            'name'                   => 'required|string|max:255',
+            'description'            => 'required|string',
+            'category_id'            => 'required|exists:categories,id',
+            'price_inr'              => 'required|numeric|min:0',
+            'price_aed'              => 'required|numeric|min:0',
+            'distributor_price_inr'  => 'required|numeric|min:0',
+            'distributor_price_aed'  => 'required|numeric|min:0',
+            'commission_amount_inr'  => 'required|numeric|min:0',
+            'commission_amount_aed'  => 'required|numeric|min:0',
+            'stock_quantity'         => 'required|integer|min:0',
+            'images'                 => 'nullable|array',
+            'images.*'               => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'status'                 => 'nullable|in:active,inactive,out_of_stock',
+            'meta_title'             => 'nullable|string|max:255',
+            'meta_description'       => 'nullable|string',
         ]);
 
-        $data = $request->all();
-        if ($request->has('name')) {
-            $data['slug'] = Str::slug($request->name);
+        // Handle new image uploads (merge with existing)
+        if ($request->hasFile('images')) {
+            $imagePaths = [];
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('products', 'public');
+                $imagePaths[] = asset('storage/' . $path);
+            }
+            $validated['images'] = array_merge($product->images ?? [], $imagePaths);
         }
 
-        $this->productService->updateProduct($id, $data);
+        // Re-generate slug if name changed
+        $validated['slug'] = Str::slug($validated['name']);
+
+        // Use only validated data — prevent mass assignment of arbitrary fields
+        $this->productService->updateProduct($id, $validated);
 
         return response()->json([
             'message' => 'Product updated successfully'

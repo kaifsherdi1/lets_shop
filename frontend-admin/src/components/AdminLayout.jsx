@@ -3,13 +3,14 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar.jsx';
 
 const PAGE_TITLES = {
-  '/':             { title: 'Dashboard',   sub: 'Welcome back, here\'s what\'s happening today' },
-  '/products':     { title: 'Products',    sub: 'Manage your product catalog' },
-  '/categories':   { title: 'Categories',  sub: 'Organize products into categories' },
-  '/orders':       { title: 'Orders',      sub: 'View and manage all customer orders' },
-  '/commissions':  { title: 'Commissions', sub: 'Review and approve agent commissions' },
-  '/withdrawals':  { title: 'Withdrawals', sub: 'Manage wallet withdrawal requests' },
-  '/users':        { title: 'Users',       sub: 'Manage all registered users' },
+  '/':             { title: 'Dashboard',     sub: 'Welcome back, here\'s what\'s happening today' },
+  '/products':     { title: 'Products',      sub: 'Manage your product catalog' },
+  '/categories':   { title: 'Categories',    sub: 'Organize products into categories' },
+  '/orders':       { title: 'Orders',        sub: 'View and manage all customer orders' },
+  '/commissions':  { title: 'Commissions',   sub: 'Review and approve agent commissions' },
+  '/withdrawals':  { title: 'Withdrawals',   sub: 'Manage wallet withdrawal requests' },
+  '/users':        { title: 'Users',         sub: 'Manage all registered users' },
+  '/portal':       { title: 'My Portal',     sub: 'Your personal earnings and performance dashboard' },
 };
 
 export default function AdminLayout() {

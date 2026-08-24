@@ -14,11 +14,11 @@ import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
+import Profile from './pages/Profile';
 import About from './pages/About';
 import Contact from './pages/Contact';
-import Repair from './pages/Repair';
-import Replacement from './pages/Replacement';
 import CategoryPage from './pages/CategoryPage';
+import NotFound from './pages/NotFound';
 import MainLayout from './components/layout/MainLayout';
 
 import { Toaster } from 'react-hot-toast';
@@ -41,8 +41,6 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/services/repair" element={<Repair />} />
-              <Route path="/services/replacement" element={<Replacement />} />
               <Route path="/products" element={<Products />} />
               <Route path="/products/:id" element={<ProductDetail />} />
               <Route path="/categories/:slug" element={<CategoryPage />} />
@@ -72,7 +70,18 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
+
+            {/* 404 catch-all */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </CartProvider>
       </AuthProvider>

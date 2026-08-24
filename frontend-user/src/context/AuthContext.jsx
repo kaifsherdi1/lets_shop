@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on mount
     if (token) {
       fetchUser();
     } else {
@@ -21,9 +20,13 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await authAPI.me();
       setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
     } catch (error) {
       console.error('Failed to fetch user:', error);
-      logout();
+      // If 401 Unauthorized (token expired), auto-logout
+      if (error.response?.status === 401) {
+        logout();
+      }
     } finally {
       setLoading(false);
     }
@@ -52,7 +55,7 @@ export const AuthProvider = ({ children }) => {
         await authAPI.logout();
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      // Silently ignore logout API errors (token may be expired)
     } finally {
       setToken(null);
       setUser(null);
@@ -61,12 +64,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Update the user in context + localStorage after profile edits.
+   * Call this from the Profile page after a successful PUT /profile response.
+   */
+  const updateUser = (updatedFields) => {
+    const merged = { ...user, ...updatedFields };
+    setUser(merged);
+    localStorage.setItem('user', JSON.stringify(merged));
+  };
+
+  /**
+   * Force a fresh user fetch from the server (e.g., after email verification).
+   */
+  const refreshUser = () => fetchUser();
+
   const value = {
     user,
     token,
     login,
     register,
     logout,
+    updateUser,
+    refreshUser,
     isAuthenticated: !!token,
     loading,
   };
@@ -81,3 +101,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

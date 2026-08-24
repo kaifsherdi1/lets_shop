@@ -11,6 +11,8 @@ import Orders from './pages/Orders.jsx';
 import Commissions from './pages/Commissions.jsx';
 import Withdrawals from './pages/Withdrawals.jsx';
 import Users from './pages/Users.jsx';
+import Portal from './pages/Portal.jsx';
+import NotFound from './pages/NotFound.jsx';
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -37,8 +39,10 @@ export default function App() {
             <Route path="commissions" element={<Commissions />} />
             <Route path="withdrawals" element={<Withdrawals />} />
             <Route path="users" element={<Users />} />
+            <Route path="portal" element={<Portal />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
+          
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

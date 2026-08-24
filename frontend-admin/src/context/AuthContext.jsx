@@ -3,6 +3,9 @@ import axios from '../api/axios.js';
 
 const AuthContext = createContext(null);
 
+// Roles permitted to access the admin panel
+const ALLOWED_ROLES = ['admin', 'manager', 'accountant', 'distributor', 'agent'];
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('admin_token'));
   const [user, setUser]   = useState(() => {
@@ -12,11 +15,12 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const { data } = await axios.post('/auth/login', { email, password, device_name: 'Admin Browser' });
-    // Only allow admins/managers
     const role = data.user?.role || '';
-    if (!['admin', 'manager'].includes(role)) {
-      throw new Error('Access denied. Admin privileges required.');
+
+    if (!ALLOWED_ROLES.includes(role)) {
+      throw new Error('Access denied. You do not have permission to access this panel.');
     }
+
     localStorage.setItem('admin_token', data.token);
     localStorage.setItem('admin_user', JSON.stringify(data.user));
     setToken(data.token);
@@ -32,8 +36,19 @@ export function AuthProvider({ children }) {
     axios.post('/auth/logout').catch(() => {});
   }, []);
 
+  /**
+   * Update admin user in context + localStorage (used by profile edits).
+   */
+  const updateUser = useCallback((updatedFields) => {
+    setUser(prev => {
+      const merged = { ...prev, ...updatedFields };
+      localStorage.setItem('admin_user', JSON.stringify(merged));
+      return merged;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -42,3 +57,4 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+
