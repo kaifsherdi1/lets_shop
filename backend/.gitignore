@@ -1,22 +1,19 @@
 # ─── Laravel / PHP ───────────────────────────────
-vendor/
+/vendor/
 .env
 .env.*
 !.env.example
-storage/framework/cache/
-storage/framework/sessions/
-storage/framework/views/
-storage/logs/
-bootstrap/cache/
-public/hot
-public/storage
-
-# ─── Composer ────────────────────────────────────
-composer.lock
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
 
 # ─── Testing ─────────────────────────────────────
 .phpunit.cache
 .phpunit.result.cache
+
+# ─── Local dev database ──────────────────────────
+/database/database.sqlite
 
 # ─── OS / IDE ────────────────────────────────────
 .DS_Store

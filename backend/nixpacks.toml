@@ -1,0 +1,2 @@
+# Force a PHP-only build (this is a pure API — the React apps deploy separately).
+providers = ["php"]

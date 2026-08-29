@@ -106,9 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::middleware('role:admin')->group(function () {
     Route::post('/admin/users', [\App\Http\Controllers\Api\AdminController::class, 'userStore']);
     Route::patch('/admin/users/{id}/role', [\App\Http\Controllers\Api\AdminController::class, 'updateUserRole']);
-    Route::get('/admin/roles', function () {
-      return \App\Models\Role::select('slug', 'name')->orderBy('id')->get();
-    });
+    Route::get('/admin/roles', [\App\Http\Controllers\Api\AdminController::class, 'roles']);
   });
 
   // ── Distributor/Agent portal routes ──────────────────────────

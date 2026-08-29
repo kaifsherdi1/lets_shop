@@ -89,6 +89,12 @@ class AdminController extends Controller
         return User::whereHas('role', fn ($q) => $q->whereIn('slug', (array) $slugs))->count();
     }
 
+    /** GET /api/admin/roles */
+    public function roles()
+    {
+        return response()->json(Role::select('slug', 'name')->orderBy('id')->get());
+    }
+
     /**
      * GET /api/admin/monthly-stats — 6-month order + revenue series.
      */
