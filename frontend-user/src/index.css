@@ -1,12 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* =========================================================
    Template CSS — exact Charitics design
+   (must precede @tailwind per CSS @import rules)
    ========================================================= */
 @import "./assets/icon/flaticon_charitics.css";
 @import "./assets/css/template.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --color-primary-50: #f0f7f6;

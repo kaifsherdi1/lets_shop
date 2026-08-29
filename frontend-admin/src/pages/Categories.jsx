@@ -18,7 +18,8 @@ export default function Categories() {
     setLoading(true);
     try {
       const r = await axios.get('/categories');
-      setCategories(r.data?.data || r.data || []);
+      const list = r.data?.categories || r.data?.data || r.data || [];
+      setCategories(Array.isArray(list) ? list : []);
     } catch { toast.error('Failed to load categories'); }
     finally { setLoading(false); }
   };

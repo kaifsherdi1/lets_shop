@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '../../utils/currency';
-import { resolveProductImage } from '../../utils/image';
+import ProductImage from './ProductImage';
 
 /**
  * ProductCard — styled to closely match the Charitics template donation card:
@@ -34,25 +34,13 @@ const ProductCard = ({ product, currency, onAddToCart, isAuthenticated }) => {
     >
       {/* ── Image area ── */}
       <div style={{ position: 'relative', paddingTop: '62%', background: '#e9edf0', overflow: 'hidden' }}>
-        {product.images?.[0] ? (
-          <img
-            src={resolveProductImage(product.images[0])}
-            alt={product.name}
-            style={{
-              position: 'absolute', inset: 0, width: '100%', height: '100%',
-              objectFit: 'cover', transition: 'transform 0.6s ease',
-            }}
-          />
-        ) : (
-          <div style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'linear-gradient(135deg, #e9edf0, #d1d8e0)',
-            fontSize: '3rem', color: '#aab',
-          }}>
-            🛍️
-          </div>
-        )}
+        <ProductImage
+          product={product}
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'cover', transition: 'transform 0.6s ease',
+          }}
+        />
 
         {/* Category tag — orange pill, top-left (matches template) */}
         {product.category?.name && (

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useOutletContext } from 'react-router-dom';
 import PageBanner from '../components/layout/PageBanner';
+import { productsBanner } from '../assets/banners';
 import ProductCard from '../components/product/ProductCard';
 import { productAPI } from '../api/products';
 import { useAuth } from '../context/AuthContext';
@@ -56,7 +57,7 @@ export default function Products() {
 
   return (
     <main>
-      <PageBanner title="Our Products" crumbs={[{ label: 'Products' }]} />
+      <PageBanner title="Our Products" crumbs={[{ label: 'Products' }]} bg={productsBanner} />
 
       <section className="ul-section-spacing">
         <div className="ul-container">

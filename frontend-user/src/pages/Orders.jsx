@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { orderAPI } from '../api/orders';
 import { formatCurrency } from '../utils/currency';
-import MainLayout from '../components/layout/MainLayout';
 import PageBanner from '../components/layout/PageBanner';
+import { ordersBanner } from '../assets/banners';
 import toast from 'react-hot-toast';
 
 const statusConfig = {
@@ -53,10 +53,11 @@ const Orders = () => {
   };
 
   return (
-    <MainLayout>
+    <>
       <PageBanner
         title="My Orders"
         crumbs={[{ label: 'Orders' }]}
+        bg={ordersBanner}
       />
 
       <section className="ul-section-spacing">
@@ -117,17 +118,17 @@ const Orders = () => {
                     <div style={{ padding: '14px 24px', display: 'flex', gap: '24px', flexWrap: 'wrap', background: 'var(--ul-c4)' }}>
                       <span style={{ fontSize: '0.82rem', color: 'var(--ul-gray)' }}>
                         <strong style={{ color: 'var(--ul-black)' }}>Total: </strong>
-                        {formatCurrency(order.total_amount, order.currency)}
+                        {formatCurrency(order.total_amount ?? order.total ?? 0, order.currency)}
+                      </span>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--ul-gray)' }}>
+                        <strong style={{ color: 'var(--ul-black)' }}>Method: </strong>
+                        {(order.payment_method || '—').replace('_', ' ').toUpperCase()}
                       </span>
                       <span style={{ fontSize: '0.82rem', color: 'var(--ul-gray)' }}>
                         <strong style={{ color: 'var(--ul-black)' }}>Payment: </strong>
-                        {order.payment_method?.toUpperCase()}
-                      </span>
-                      <span style={{ fontSize: '0.82rem', color: 'var(--ul-gray)' }}>
-                          <strong style={{ color: 'var(--ul-black)' }}>Payment: </strong>
                         {(order.payment_status || 'pending').toUpperCase()}
                       </span>
-                      {(order.order_status === 'pending') && ( // Use order_status for cancel condition
+                      {['pending', 'processing'].includes(statusKey) && (
                         <button
                           onClick={() => handleCancelOrder(order.id)}
                           style={{
@@ -171,7 +172,7 @@ const Orders = () => {
           )}
         </div>
       </section>
-    </MainLayout>
+    </>
   );
 };
 

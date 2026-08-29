@@ -4,10 +4,10 @@ import { productAPI } from '../api/products';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/currency';
-import MainLayout from '../components/layout/MainLayout';
 import PageBanner from '../components/layout/PageBanner';
+import { productsBanner } from '../assets/banners';
 import toast from 'react-hot-toast';
-import { resolveProductImage } from '../utils/image';
+import ProductImage from '../components/product/ProductImage';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -67,13 +67,11 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div style={{ textAlign: 'center', padding: '160px 0', color: 'var(--ul-gray)' }}>
-          <div style={{ width: '50px', height: '50px', margin: '0 auto 16px', border: '4px solid var(--ul-c3)', borderTopColor: 'var(--ul-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          Loading product...
-        </div>
-      </MainLayout>
+      <div style={{ textAlign: 'center', padding: '160px 0', color: 'var(--ul-gray)' }}>
+        <div style={{ width: '50px', height: '50px', margin: '0 auto 16px', border: '4px solid var(--ul-c3)', borderTopColor: 'var(--ul-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        Loading product...
+      </div>
     );
   }
 
@@ -83,13 +81,14 @@ const ProductDetail = () => {
   const inStock = product.stock_quantity > 0;
 
   return (
-    <MainLayout>
+    <>
       <PageBanner
         title={product.name}
         crumbs={[
           { to: '/products', label: 'Products' },
           { label: product.name },
         ]}
+        bg={productsBanner}
       />
 
       <section className="ul-section-spacing">
@@ -119,15 +118,10 @@ const ProductDetail = () => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 position: 'relative',
               }}>
-                {product.images?.[0] ? (
-                  <img
-                    src={resolveProductImage(product.images[0])}
-                    alt={product.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <div style={{ fontSize: '6rem', opacity: 0.4 }}>🛍️</div>
-                )}
+                <ProductImage
+                  product={product}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
                 {product.category?.name && (
                   <span style={{
                     position: 'absolute', top: '16px', left: '16px',
@@ -253,7 +247,7 @@ const ProductDetail = () => {
           </div>
         </div>
       </section>
-    </MainLayout>
+    </>
   );
 };
 

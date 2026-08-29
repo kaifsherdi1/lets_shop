@@ -2,29 +2,38 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { getStoredCurrency, setStoredCurrency } from '../../utils/currency';
+import { productAPI } from '../../api/products';
+import BrandMark from './BrandMark';
 
-// Template images
-import logoSvg from '../../assets/images/logo.svg';
-import logoIcon from '../../assets/images/logo-icon.png';
-
-const CATEGORIES = [
-  { id: 1, name: 'Electronics', slug: 'electronics' },
-  { id: 2, name: 'Fashion', slug: 'fashion' },
-  { id: 3, name: 'Home & Kitchen', slug: 'home-kitchen' },
-  { id: 4, name: 'Books', slug: 'books-stationery' },
-  { id: 5, name: 'Sports', slug: 'sports-outdoors' },
-  { id: 6, name: 'Beauty', slug: 'beauty-personal-care' },
+const FALLBACK_CATEGORIES = [
+  { id: 'electronics', name: 'Electronics', slug: 'electronics' },
+  { id: 'fashion', name: 'Fashion', slug: 'fashion' },
+  { id: 'home-kitchen', name: 'Home & Kitchen', slug: 'home-kitchen' },
+  { id: 'sports-outdoors', name: 'Sports & Outdoors', slug: 'sports-outdoors' },
 ];
 
-export default function Navbar() {
+export default function Navbar({ currency, setCurrency }) {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [currency, setCurrency] = useState(getStoredCurrency() || 'AED');
+  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
+
+  useEffect(() => {
+    let alive = true;
+    productAPI
+      .getCategories()
+      .then((d) => {
+        const cats = d?.categories || d?.data || (Array.isArray(d) ? d : []);
+        if (alive && Array.isArray(cats) && cats.length) setCategories(cats);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // Dropdown hover states
   const [productsOpen, setProductsOpen] = useState(false);
@@ -51,7 +60,6 @@ export default function Navbar() {
 
   function handleCurrency(cur) {
     setCurrency(cur);
-    setStoredCurrency(cur);
   }
 
   function handleLogout() {
@@ -110,8 +118,8 @@ export default function Navbar() {
               {sideProductsOpen && (
                 <div style={{ paddingLeft: '15px', marginTop: '5px', display: 'flex', flexDirection: 'column', gap: '5px', borderLeft: '2px solid var(--ul-primary)' }}>
                   <NavLink to="/products" onClick={() => setSidebarOpen(false)} style={mobileSubLink}>All Products</NavLink>
-                  {CATEGORIES.map(c => (
-                    <NavLink key={c.id} to={`/categories/${c.slug}`} onClick={() => setSidebarOpen(false)} style={mobileSubLink}>{c.name}</NavLink>
+                  {categories.map(c => (
+                    <NavLink key={c.id} to={`/products?category=${c.id}`} onClick={() => setSidebarOpen(false)} style={mobileSubLink}>{c.name}</NavLink>
                   ))}
                 </div>
               )}
@@ -166,14 +174,7 @@ export default function Navbar() {
                   padding: '6px 18px 6px 8px',
                   boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
                 }}>
-                  <span style={{
-                    width: '32px', height: '32px', borderRadius: '50%',
-                    background: 'var(--ul-primary)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1rem',
-                  }}>
-                    <img src={logoIcon} alt="Logo" style={{ width: '20px', height: '20px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-                  </span>
+                  <BrandMark size={32} />
                   <span style={{
                     fontFamily: 'var(--font-quicksand)', fontWeight: 800,
                     fontSize: '1.1rem', color: 'var(--ul-black)',
@@ -206,8 +207,8 @@ export default function Navbar() {
                     <div className="ul-header-submenu" style={{ display: productsOpen ? 'block' : '' }}>
                       <ul>
                         <li><Link to="/products">All Products</Link></li>
-                        {CATEGORIES.map(c => (
-                          <li key={c.id}><Link to={`/categories/${c.slug}`}>{c.name}</Link></li>
+                        {categories.map(c => (
+                          <li key={c.id}><Link to={`/products?category=${c.id}`}>{c.name}</Link></li>
                         ))}
                       </ul>
                     </div>

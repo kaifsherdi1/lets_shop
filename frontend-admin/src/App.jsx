@@ -14,6 +14,9 @@ import Users from './pages/Users.jsx';
 import Portal from './pages/Portal.jsx';
 import NotFound from './pages/NotFound.jsx';
 
+const STAFF_ROLES = ['admin', 'manager', 'accountant'];
+const isPortalRole = (role) => ['distributor', 'agent'].includes(role);
+
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
   return token ? children : <Navigate to="/login" replace />;
@@ -24,6 +27,24 @@ function PublicRoute({ children }) {
   return token ? <Navigate to="/" replace /> : children;
 }
 
+// Distributors/agents land on their portal; staff land on the ops dashboard.
+function HomeScreen() {
+  const { user } = useAuth();
+  return isPortalRole(user?.role) ? <Portal /> : <Dashboard />;
+}
+
+// Gate a route to staff roles; portal users are bounced to their portal.
+function StaffOnly({ children }) {
+  const { user } = useAuth();
+  return STAFF_ROLES.includes(user?.role) ? children : <Navigate to="/portal" replace />;
+}
+
+// The portal is only meaningful for vendors; staff are sent to the dashboard.
+function PortalOnly({ children }) {
+  const { user } = useAuth();
+  return isPortalRole(user?.role) ? children : <Navigate to="/" replace />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -32,14 +53,14 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-            <Route index element={<Dashboard />} />
+            <Route index element={<HomeScreen />} />
             <Route path="products" element={<Products />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="orders" element={<Orders />} />
+            <Route path="categories" element={<StaffOnly><Categories /></StaffOnly>} />
+            <Route path="orders" element={<StaffOnly><Orders /></StaffOnly>} />
             <Route path="commissions" element={<Commissions />} />
             <Route path="withdrawals" element={<Withdrawals />} />
-            <Route path="users" element={<Users />} />
-            <Route path="portal" element={<Portal />} />
+            <Route path="users" element={<StaffOnly><Users /></StaffOnly>} />
+            <Route path="portal" element={<PortalOnly><Portal /></PortalOnly>} />
           </Route>
           
           <Route path="*" element={<NotFound />} />

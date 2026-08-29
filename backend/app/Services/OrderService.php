@@ -109,7 +109,7 @@ class OrderService
           $distributorPrice = $currency === 'INR' ? $product->distributor_price_inr : $product->distributor_price_aed;
           $commissionAmount = $currency === 'INR' ? $product->commission_amount_inr : $product->commission_amount_aed;
 
-          OrderItem::create([
+          $orderItem = OrderItem::create([
             'order_id' => $order->id,
             'product_id' => $product->id,
             'distributor_id' => $product->distributor_id,
@@ -119,6 +119,18 @@ class OrderService
             'commission_amount' => $commissionAmount,
             'commission_status' => 'pending',
           ]);
+
+          // Record the commission owed to the product's distributor/agent.
+          // Approval (and the wallet credit) happens later via the admin workflow.
+          if ($product->distributor_id && $commissionAmount > 0) {
+            \App\Models\Commission::create([
+              'order_item_id' => $orderItem->id,
+              'distributor_id' => $product->distributor_id,
+              'currency' => $currency,
+              'amount' => round($commissionAmount * $item->quantity, 2),
+              'status' => 'pending',
+            ]);
+          }
 
           $product->decreaseStock($item->quantity);
 
@@ -161,6 +173,12 @@ class OrderService
     return DB::transaction(function () use ($order) {
       foreach ($order->items as $item) {
         $item->product->increaseStock($item->quantity);
+
+        // Void commissions that have not been approved/paid yet.
+        \App\Models\Commission::where('order_item_id', $item->id)
+          ->where('status', 'pending')
+          ->delete();
+        $item->update(['commission_status' => 'cancelled']);
       }
 
       $order->update(['order_status' => 'cancelled', 'status' => 'cancelled']);

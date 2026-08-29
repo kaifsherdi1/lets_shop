@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
+import PasswordField from '../components/PasswordField';
 import toast from 'react-hot-toast';
 
 const inputStyle = {
@@ -72,8 +73,7 @@ const Login = () => {
           <label style={{ display: 'block', fontWeight: 700, color: 'var(--ul-black)', marginBottom: '8px', fontSize: '0.88rem' }}>
             Password
           </label>
-          <input
-            type="password"
+          <PasswordField
             id="password"
             name="password"
             autoComplete="current-password"

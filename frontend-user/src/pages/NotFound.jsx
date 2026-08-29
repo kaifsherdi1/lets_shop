@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 
 export default function NotFound() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ul-gray3)' }}>
-      <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ul-gray3)' }}>
+      <div style={{ textAlign: 'center', padding: '80px 20px' }}>
         <div style={{ fontSize: '8rem', fontWeight: 900, fontFamily: 'var(--font-quicksand)', color: 'var(--ul-primary)', lineHeight: 1, marginBottom: '8px' }}>
           404
         </div>

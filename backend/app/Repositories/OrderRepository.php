@@ -22,6 +22,11 @@ class OrderRepository extends BaseRepository
 
   public function getWithItems(int $id): Order
   {
-    return $this->model->with(['items.product', 'address', 'payment'])->findOrFail($id);
+    return $this->model->with([
+      'items.product',
+      'address',
+      'payment',
+      'user:id,full_name,name,email,phone',
+    ])->findOrFail($id);
   }
 }

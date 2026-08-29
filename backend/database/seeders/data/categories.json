@@ -1,0 +1,34 @@
+[
+  {
+    "slug": "electronics",
+    "image": "/img/categories/electronics.jpg"
+  },
+  {
+    "slug": "fashion",
+    "image": "/img/categories/fashion.jpg"
+  },
+  {
+    "slug": "home-kitchen",
+    "image": "/img/categories/home-kitchen.jpg"
+  },
+  {
+    "slug": "beauty-personal-care",
+    "image": "/img/categories/beauty-personal-care.jpg"
+  },
+  {
+    "slug": "sports-outdoors",
+    "image": "/img/categories/sports-outdoors.jpg"
+  },
+  {
+    "slug": "books-stationery",
+    "image": null
+  },
+  {
+    "slug": "toys-games",
+    "image": null
+  },
+  {
+    "slug": "health-wellness",
+    "image": null
+  }
+]

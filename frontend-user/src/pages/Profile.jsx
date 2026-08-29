@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PageBanner from '../components/layout/PageBanner';
+import PasswordField from '../components/PasswordField';
+import { accountBanner } from '../assets/banners';
 import axiosInstance from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -80,7 +82,7 @@ const Profile = () => {
 
   return (
     <>
-      <PageBanner title="My Profile" crumbs={[{ label: 'Profile' }]} />
+      <PageBanner title="My Profile" crumbs={[{ label: 'Profile' }]} bg={accountBanner} />
 
       <section className="ul-section-spacing">
         <div className="ul-container">
@@ -145,9 +147,9 @@ const Profile = () => {
                             value={form.name}
                             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                             placeholder="username"
-                            style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-c2)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+                            style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-gray2)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
                             onFocus={e => e.target.style.borderColor = 'var(--ul-primary)'}
-                            onBlur={e => e.target.style.borderColor = 'var(--ul-c2)'}
+                            onBlur={e => e.target.style.borderColor = 'var(--ul-gray2)'}
                           />
                         </div>
                         <div>
@@ -157,9 +159,9 @@ const Profile = () => {
                             value={form.full_name}
                             onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
                             placeholder="Your full name"
-                            style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-c2)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
+                            style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-gray2)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
                             onFocus={e => e.target.style.borderColor = 'var(--ul-primary)'}
-                            onBlur={e => e.target.style.borderColor = 'var(--ul-c2)'}
+                            onBlur={e => e.target.style.borderColor = 'var(--ul-gray2)'}
                           />
                         </div>
                       </div>
@@ -169,7 +171,7 @@ const Profile = () => {
                           type="email"
                           value={profile?.email || ''}
                           disabled
-                          style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-c2)', borderRadius: '10px', fontSize: '0.95rem', background: '#f8f9fa', color: 'var(--ul-gray)', boxSizing: 'border-box', cursor: 'not-allowed' }}
+                          style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-gray2)', borderRadius: '10px', fontSize: '0.95rem', background: '#f8f9fa', color: 'var(--ul-gray)', boxSizing: 'border-box', cursor: 'not-allowed' }}
                         />
                         <p style={{ color: 'var(--ul-gray)', fontSize: '0.78rem', marginTop: '6px' }}>Email cannot be changed. Contact support if needed.</p>
                       </div>
@@ -180,9 +182,9 @@ const Profile = () => {
                           value={form.phone}
                           onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                           placeholder="+91 98765 43210"
-                          style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-c2)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
+                          style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-gray2)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
                           onFocus={e => e.target.style.borderColor = 'var(--ul-primary)'}
-                          onBlur={e => e.target.style.borderColor = 'var(--ul-c2)'}
+                          onBlur={e => e.target.style.borderColor = 'var(--ul-gray2)'}
                         />
                       </div>
                       <button
@@ -210,15 +212,15 @@ const Profile = () => {
                       ].map(field => (
                         <div key={field.key} style={{ marginBottom: '20px' }}>
                           <label style={{ display: 'block', fontWeight: 700, color: 'var(--ul-black)', marginBottom: '8px', fontSize: '0.88rem' }}>{field.label}</label>
-                          <input
-                            type="password"
+                          <PasswordField
                             value={pwForm[field.key]}
                             onChange={e => setPwForm(f => ({ ...f, [field.key]: e.target.value }))}
                             placeholder={field.placeholder}
+                            autoComplete={field.key === 'current_password' ? 'current-password' : 'new-password'}
                             required
-                            style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-c2)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
+                            style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--ul-gray2)', borderRadius: '10px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
                             onFocus={e => e.target.style.borderColor = 'var(--ul-primary)'}
-                            onBlur={e => e.target.style.borderColor = 'var(--ul-c2)'}
+                            onBlur={e => e.target.style.borderColor = 'var(--ul-gray2)'}
                           />
                         </div>
                       ))}

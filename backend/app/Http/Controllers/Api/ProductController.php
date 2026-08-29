@@ -16,10 +16,45 @@ class ProductController extends Controller
         $this->productService = $productService;
     }
 
+    /**
+     * Roles that may see distributor cost price and commission figures.
+     * These routes are public, so resolve the bearer token via the sanctum
+     * guard explicitly (there is no auth middleware to do it for us).
+     */
+    private function canSeeInternal(Request $request): bool
+    {
+        $user = $request->user() ?: $request->user('sanctum');
+
+        return $user && $user->hasAnyRole(['admin', 'manager', 'accountant', 'distributor', 'agent']);
+    }
+
     public function index(Request $request)
     {
         $filters = $request->only(['category_id', 'distributor_id', 'search']);
-        $products = $this->productService->getProducts(20, ['category', 'distributor'], $filters);
+        $perPage = (int) $request->get('per_page', 20);
+
+        // Staff / vendors get a fresh (uncached) query with the internal cost
+        // fields revealed; the public storefront gets the cached, sanitised list.
+        if ($this->canSeeInternal($request)) {
+            $query = \App\Models\Product::with(['category', 'distributor']);
+            if (! empty($filters['category_id'])) {
+                $query->where('category_id', $filters['category_id']);
+            }
+            if (! empty($filters['distributor_id'])) {
+                $query->where('distributor_id', $filters['distributor_id']);
+            }
+            if (! empty($filters['search'])) {
+                $s = $filters['search'];
+                $query->where(fn ($q) => $q->where('name', 'like', "%{$s}%")
+                    ->orWhere('sku', 'like', "%{$s}%"));
+            }
+            $products = $query->orderBy('created_at', 'desc')->paginate($perPage);
+            $products->getCollection()->each->makeVisible(\App\Models\Product::INTERNAL_FIELDS);
+
+            return response()->json($products);
+        }
+
+        $products = $this->productService->getProducts($perPage, ['category', 'distributor'], $filters);
 
         return response()->json($products);
     }
@@ -38,11 +73,12 @@ class ProductController extends Controller
             $data['images'] = $imagePaths;
         }
 
-        $data['slug'] = Str::slug($request->name);
+        $data['slug'] = $this->uniqueSlug($request->name);
         $data['distributor_id'] = $request->user()->id;
         $data['status'] = $data['status'] ?? 'active';
 
         $product = $this->productService->createProduct($data);
+        $product->makeVisible(\App\Models\Product::INTERNAL_FIELDS);
 
         return response()->json([
             'message' => 'Product created successfully',
@@ -50,13 +86,35 @@ class ProductController extends Controller
         ], 201);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $product = $this->productService->getProductById($id, ['category', 'distributor']);
+
+        if ($this->canSeeInternal($request)) {
+            $product->makeVisible(\App\Models\Product::INTERNAL_FIELDS);
+        }
 
         return response()->json([
             'product' => $product
         ]);
+    }
+
+    /** Build a slug that will not collide with an existing product. */
+    private function uniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: 'product';
+        $slug = $base;
+        $i = 2;
+
+        while (\App\Models\Product::withTrashed()
+            ->where('slug', $slug)
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->exists()) {
+            $slug = "{$base}-{$i}";
+            $i++;
+        }
+
+        return $slug;
     }
 
     public function update(Request $request, $id)
@@ -96,8 +154,8 @@ class ProductController extends Controller
             $validated['images'] = array_merge($product->images ?? [], $imagePaths);
         }
 
-        // Re-generate slug if name changed
-        $validated['slug'] = Str::slug($validated['name']);
+        // Re-generate slug if name changed (kept collision-free)
+        $validated['slug'] = $this->uniqueSlug($validated['name'], (int) $id);
 
         // Use only validated data — prevent mass assignment of arbitrary fields
         $this->productService->updateProduct($id, $validated);
@@ -125,6 +183,8 @@ class ProductController extends Controller
     public function myProducts(Request $request)
     {
         $products = $this->productService->getMyProducts($request->user()->id, 20);
+        $products->getCollection()->each->makeVisible(\App\Models\Product::INTERNAL_FIELDS);
+
         return response()->json($products);
     }
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import PageBanner from '../components/layout/PageBanner';
+import { productsBanner } from '../assets/banners';
 import ProductCard from '../components/product/ProductCard';
 import { productAPI } from '../api/products';
 import { useAuth } from '../context/AuthContext';
@@ -63,6 +64,7 @@ export default function CategoryPage() {
           { label: 'Products', to: '/products' },
           { label: category ? category.name : slug }
         ]}
+        bg={productsBanner}
       />
 
       <section className="ul-section-spacing">

@@ -92,13 +92,23 @@ Route::middleware('auth:sanctum')->group(function () {
     }
   );
 
-  // ── Admin-only routes ────────────────────────────────────────
+  // ── Admin / Manager routes ───────────────────────────────────
   Route::middleware('role:admin,manager')->group(function () {
     Route::get('/admin/stats', [\App\Http\Controllers\Api\AdminController::class, 'stats']);
     Route::get('/admin/monthly-stats', [\App\Http\Controllers\Api\AdminController::class, 'monthlyStats']);
     Route::get('/admin/users', [\App\Http\Controllers\Api\AdminController::class, 'users']);
+    Route::get('/admin/users/{id}', [\App\Http\Controllers\Api\AdminController::class, 'userShow']);
     Route::patch('/admin/orders/{id}/status', [\App\Http\Controllers\Api\AdminController::class, 'updateOrderStatus']);
     Route::patch('/admin/users/{id}/status', [\App\Http\Controllers\Api\AdminController::class, 'toggleUserStatus']);
+  });
+
+  // ── Admin-only (user management) ─────────────────────────────
+  Route::middleware('role:admin')->group(function () {
+    Route::post('/admin/users', [\App\Http\Controllers\Api\AdminController::class, 'userStore']);
+    Route::patch('/admin/users/{id}/role', [\App\Http\Controllers\Api\AdminController::class, 'updateUserRole']);
+    Route::get('/admin/roles', function () {
+      return \App\Models\Role::select('slug', 'name')->orderBy('id')->get();
+    });
   });
 
   // ── Distributor/Agent portal routes ──────────────────────────

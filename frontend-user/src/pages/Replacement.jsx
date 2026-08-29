@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import PageBanner from '../components/layout/PageBanner';
+import { servicesBanner } from '../assets/banners';
 
-const service1 = '/assets/images/service-1.jpg';
-const service2 = '/assets/images/service-2.jpg';
-const service3 = '/assets/img/service-3.jpg';
-const service4 = '/assets/img/service-4.jpg';
-const whyJoin = '/assets/img/why-join.jpg';
+import service1 from '../assets/images/service-components.png';
+import service2 from '../assets/images/service-repair.png';
+import service3 from '../assets/images/service-software.png';
+import service4 from '../assets/images/service-diagnostic.png';
+import whyJoin from '../assets/images/service-why.png';
 
 const SERVICES = [
   { id: 1, img: service1, title: 'Screen Replacement', desc: 'Crystal-clear screen replacements using OEM parts. All screen types supported.' },
@@ -40,7 +41,7 @@ export default function Replacement() {
 
   return (
     <main>
-      <PageBanner title="Replacement Service" crumbs={[{ label: 'Services', to: '/services/repair' }, { label: 'Replacement' }]} />
+      <PageBanner title="Replacement Service" crumbs={[{ label: 'Services', to: '/services/repair' }, { label: 'Replacement' }]} bg={servicesBanner} />
 
       {/* Services Grid */}
       <section className="ul-section-spacing overflow-hidden">

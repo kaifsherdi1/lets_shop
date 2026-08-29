@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import { authAPI } from '../api/auth';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const OtpVerification = () => {
@@ -10,6 +11,7 @@ const OtpVerification = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, refreshUser } = useAuth();
   const email = location.state?.email || '';
 
   const debugOtp = location.state?.debugOtp || '';
@@ -62,7 +64,12 @@ const OtpVerification = () => {
     try {
       await authAPI.verifyOtp({ email, code, type: 'registration' });
       toast.success('Email verified successfully!');
-      navigate('/login');
+      if (isAuthenticated) {
+        await refreshUser();
+        navigate('/');
+      } else {
+        navigate('/login');
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Verification failed');
     } finally {

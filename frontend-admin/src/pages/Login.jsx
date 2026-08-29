@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 import toast from 'react-hot-toast';
 
 export default function Login() {
@@ -41,7 +42,8 @@ export default function Login() {
           </div>
           <div className="form-group">
             <label className="form-label">Password</label>
-            <input name="password" type="password" className="form-control" placeholder="••••••••"
+            <PasswordField name="password" placeholder="••••••••"
+              autoComplete="current-password"
               value={form.password} onChange={handle} required />
           </div>
           <button type="submit" className="btn btn-primary w-full" style={{ height: 48, justifyContent: 'center', marginTop: 8 }} disabled={loading}>

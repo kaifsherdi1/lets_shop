@@ -31,12 +31,19 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        if (is_null($request->user()->email_verified_at)) {
+            return response()->json([
+                'message' => 'Please verify your email address before placing an order.',
+                'code' => 'email_unverified',
+            ], 403);
+        }
+
         $request->validate([
             'delivery_address' => 'required|string|min:10',
             'recipient_name' => 'nullable|string|max:255',
             'recipient_phone' => 'nullable|string|max:20',
             'currency' => 'required|in:INR,AED',
-            'payment_method' => 'required|in:cod,bank_transfer,online',
+            'payment_method' => 'required|in:cod,bank_transfer',
             'notes' => 'nullable|string',
         ]);
 

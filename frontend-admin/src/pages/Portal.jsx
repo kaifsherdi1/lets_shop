@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from '../api/axios.js';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
+import { money, shortDate, titleCase } from '../utils/format.js';
 
 const STAT_CARDS = [
   { key: 'my_products',      label: 'My Products',      icon: '📦', color: '#4a8c87', bg: '#dff0ee' },
@@ -34,7 +36,7 @@ export default function Portal() {
     ]).finally(() => setLoading(false));
   }, []);
 
-  const fmtCurrency = (n) => `AED ${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmtCurrency = (n) => money(n, 'AED');
 
   return (
     <div>
@@ -86,7 +88,7 @@ export default function Portal() {
       <div className="card">
         <div className="card-header">
           <div className="card-title">Recent Commissions</div>
-          <a href="/commissions" className="btn btn-outline btn-sm">View All →</a>
+          <Link to="/commissions" className="btn btn-outline btn-sm">View All →</Link>
         </div>
         <div className="table-wrap">
           {loading ? (
@@ -101,7 +103,7 @@ export default function Portal() {
             <table>
               <thead>
                 <tr>
-                  <th>Order #</th><th>Amount</th><th>Rate</th><th>Status</th><th>Date</th>
+                  <th>Order #</th><th>Product</th><th>Amount</th><th>Status</th><th>Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,15 +111,19 @@ export default function Portal() {
                   const st = STATUS_COLOR[c.status] || STATUS_COLOR.pending;
                   return (
                     <tr key={c.id}>
-                      <td><span style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>#{c.order?.order_number || c.order_id}</span></td>
-                      <td><strong style={{ color: 'var(--primary-dark)' }}>{fmtCurrency(c.amount)}</strong></td>
-                      <td style={{ color: 'var(--text-muted)' }}>{c.rate}%</td>
                       <td>
-                        <span style={{ padding: '4px 10px', borderRadius: '999px', fontWeight: 700, fontSize: '0.78rem', color: st.color, background: st.bg }}>
-                          {c.status.toUpperCase()}
+                        <span style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>
+                          {c.order_item?.order?.order_number || `#${c.order_item_id || c.id}`}
                         </span>
                       </td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{new Date(c.created_at).toLocaleDateString()}</td>
+                      <td>{c.order_item?.product?.name || '—'}</td>
+                      <td><strong style={{ color: 'var(--primary-dark)' }}>{money(c.amount, c.currency)}</strong></td>
+                      <td>
+                        <span style={{ padding: '4px 10px', borderRadius: '999px', fontWeight: 700, fontSize: '0.78rem', color: st.color, background: st.bg }}>
+                          {titleCase(c.status)}
+                        </span>
+                      </td>
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{shortDate(c.created_at)}</td>
                     </tr>
                   );
                 })}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
+import PasswordField from '../components/PasswordField';
 import toast from 'react-hot-toast';
 
 const inputStyle = {
@@ -119,16 +120,16 @@ const Register = () => {
         <div className="row row-cols-sm-2 row-cols-1 ul-bs-row">
           <div className="col">
             <label style={{ display: 'block', fontWeight: 700, color: 'var(--ul-black)', marginBottom: '7px', fontSize: '0.88rem' }}>Password</label>
-            <input
-              type="password" name="password" value={formData.password}
+            <PasswordField
+              name="password" value={formData.password} autoComplete="new-password"
               onChange={handleChange} required placeholder="••••••••"
               style={inputStyle} onFocus={focusStyle} onBlur={blurStyle}
             />
           </div>
           <div className="col">
             <label style={{ display: 'block', fontWeight: 700, color: 'var(--ul-black)', marginBottom: '7px', fontSize: '0.88rem' }}>Confirm</label>
-            <input
-              type="password" name="password_confirmation" value={formData.password_confirmation}
+            <PasswordField
+              name="password_confirmation" value={formData.password_confirmation} autoComplete="new-password"
               onChange={handleChange} required placeholder="••••••••"
               style={inputStyle} onFocus={focusStyle} onBlur={blurStyle}
             />

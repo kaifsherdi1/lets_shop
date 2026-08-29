@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import axios from '../api/axios.js';
+
+const STAFF_ROLES = ['admin', 'manager', 'accountant'];
 
 const ADMIN_NAV = [
   {
@@ -50,6 +53,23 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const isPortalUser = ['distributor', 'agent'].includes(user?.role);
   const NAV = isPortalUser ? PORTAL_NAV : ADMIN_NAV;
+  const [badges, setBadges] = useState({});
+
+  useEffect(() => {
+    if (!STAFF_ROLES.includes(user?.role)) return;
+    let alive = true;
+    const load = () =>
+      axios.get('/admin/stats').then((r) => {
+        if (!alive) return;
+        setBadges({
+          '/commissions': r.data?.pending_commissions || 0,
+          '/withdrawals': r.data?.pending_withdrawals || 0,
+        });
+      }).catch(() => {});
+    load();
+    const id = setInterval(load, 60000);
+    return () => { alive = false; clearInterval(id); };
+  }, [user?.role]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -77,7 +97,8 @@ export default function Sidebar() {
                 className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
               >
                 {icon}
-                {label}
+                <span style={{ flex: 1 }}>{label}</span>
+                {badges[to] > 0 && <span className="nav-badge">{badges[to]}</span>}
               </NavLink>
             ))}
           </div>

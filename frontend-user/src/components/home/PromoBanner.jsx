@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function PromoBanner() {
-  const [amount, setAmount] = useState('50');
-  const [custom, setCustom] = useState('');
-  const { currency } = useOutletContext() || { currency: 'AED' };
-
   return (
     <section className="ul-donate-form-section ul-section-spacing" style={{ position: 'relative', overflow: 'hidden' }}>
       <div className="ul-container">
@@ -17,10 +13,10 @@ export default function PromoBanner() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {[
-                { icon: 'flaticon-delivery-truck', title: 'Free Global Shipping', desc: 'On orders over $100' },
+                { icon: 'flaticon-delivery-truck', title: 'Free Delivery', desc: 'On every order, UAE & India' },
                 { icon: 'flaticon-love', title: '24/7 Priority Support', desc: 'Dedicated customer care' },
                 { icon: 'flaticon-shield', title: 'Secure Payments', desc: 'Fully encrypted transactions' },
-                { icon: 'flaticon-back', title: '30-Day Returns', desc: 'Hassle-free money back' }
+                { icon: 'flaticon-back', title: '14-Day Returns', desc: 'Hassle-free money back' }
               ].map((item, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#fff' }}>

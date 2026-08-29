@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { orderAPI } from '../api/orders';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/currency';
-import { resolveProductImage } from '../utils/image';
-import MainLayout from '../components/layout/MainLayout';
+import ProductImage from '../components/product/ProductImage';
 import PageBanner from '../components/layout/PageBanner';
+import { checkoutBanner } from '../assets/banners';
 import toast from 'react-hot-toast';
 
 const inputStyle = {
@@ -19,6 +20,7 @@ const inputStyle = {
 const Checkout = () => {
   const navigate = useNavigate();
   const { cart, refreshCart } = useCart();
+  const { user } = useAuth();
   const { currency, setCurrency } = useOutletContext() || { currency: 'AED', setCurrency: () => {} };
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -51,7 +53,13 @@ const Checkout = () => {
       toast.success(`🎉 Order ${result.order?.order_number} placed successfully!`);
       navigate('/orders');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to place order');
+      const data = error.response?.data;
+      if (data?.code === 'email_unverified') {
+        toast.error('Please verify your email before checking out.');
+        navigate('/verify-otp', { state: { email: user?.email } });
+        return;
+      }
+      toast.error(data?.message || 'Failed to place order');
     } finally {
       setLoading(false);
     }
@@ -67,8 +75,8 @@ const Checkout = () => {
   const tax   = total * 0.05;
 
   return (
-    <MainLayout>
-      <PageBanner title="Checkout" crumbs={[{ to: '/cart', label: 'Cart' }, { label: 'Checkout' }]} />
+    <>
+      <PageBanner title="Checkout" crumbs={[{ to: '/cart', label: 'Cart' }, { label: 'Checkout' }]} bg={checkoutBanner} />
 
       <section className="ul-section-spacing">
         <div className="ul-container">
@@ -213,10 +221,10 @@ const Checkout = () => {
                         return (
                           <div key={item.id} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                             <div style={{ width: '52px', height: '52px', borderRadius: '8px', background: 'var(--ul-gray3)', flexShrink: 0, overflow: 'hidden' }}>
-                              {item.product?.images?.[0]
-                                ? <img src={resolveProductImage(item.product.images[0])} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🛍️</div>
-                              }
+                              <ProductImage
+                                product={item.product}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{ fontWeight: 600, color: 'var(--ul-black)', margin: 0, fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.product?.name}</p>
@@ -273,7 +281,7 @@ const Checkout = () => {
           )}
         </div>
       </section>
-    </MainLayout>
+    </>
   );
 };
 

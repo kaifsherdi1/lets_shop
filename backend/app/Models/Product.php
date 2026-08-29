@@ -30,6 +30,25 @@ class Product extends Model
         'status',
     ];
 
+    /**
+     * Distributor cost price and commission are internal figures — never expose
+     * them to the public storefront. Controllers call makeVisible() for
+     * authenticated staff / vendors who legitimately need them.
+     */
+    protected $hidden = [
+        'distributor_price_inr',
+        'distributor_price_aed',
+        'commission_amount_inr',
+        'commission_amount_aed',
+    ];
+
+    public const INTERNAL_FIELDS = [
+        'distributor_price_inr',
+        'distributor_price_aed',
+        'commission_amount_inr',
+        'commission_amount_aed',
+    ];
+
     protected function casts(): array
     {
         return [

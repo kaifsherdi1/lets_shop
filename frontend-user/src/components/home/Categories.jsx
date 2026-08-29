@@ -7,7 +7,7 @@ import electronicsImg from '../../assets/images/category-electronics.png';
 import fashionImg from '../../assets/images/category-fashion.png';
 import homeImg from '../../assets/images/category-home.png';
 import sportsImg from '../../assets/images/category-sports.png';
-import eventBg from '../../assets/images/donations-bg.png';
+import { resolveProductImage } from '../../utils/image';
 
 const FALLBACK_CATEGORIES = [
   { id: 1, name: 'Electronics', slug: 'electronics', description: 'Gadgets, phones, laptops and more', image: electronicsImg },
@@ -16,7 +16,13 @@ const FALLBACK_CATEGORIES = [
   { id: 4, name: 'Sports', slug: 'sports-outdoors', description: 'Gear up for your active lifestyle', image: sportsImg },
 ];
 
-const IMG_FALLBACKS = [electronicsImg, fashionImg, homeImg, sportsImg];
+const localImageFor = (c) => {
+  const key = `${c.name || ''} ${c.slug || ''}`.toLowerCase();
+  if (key.includes('fashion')) return fashionImg;
+  if (key.includes('home') || key.includes('kitchen')) return homeImg;
+  if (key.includes('sport') || key.includes('outdoor')) return sportsImg;
+  return electronicsImg;
+};
 
 export default function Categories() {
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
@@ -25,20 +31,11 @@ export default function Categories() {
     productAPI.getCategories()
       .then(data => {
         const rawCats = data.categories || data.data || (Array.isArray(data) ? data : []);
-        const cats = rawCats.slice(0, 4).map((c) => {
-          // Prioritize image from DB
-          if (c.image && c.image.startsWith('http')) return c;
-
-          let image = IMG_FALLBACKS[0];
-          const name = (c.name || '').toLowerCase();
-          const slug = (c.slug || '').toLowerCase();
-          
-          if (name.includes('fashion') || slug.includes('fashion')) image = fashionImg;
-          else if (name.includes('home') || slug.includes('kitchen') || slug.includes('home')) image = homeImg;
-          else if (name.includes('sports') || slug.includes('sports')) image = sportsImg;
-          
-          return { ...c, image };
-        });
+        const cats = rawCats.slice(0, 4).map((c) => ({
+          ...c,
+          image: (c.image && resolveProductImage(c.image)) || localImageFor(c),
+          localImage: localImageFor(c),
+        }));
         if (cats.length > 0) setCategories(cats);
       })
       .catch(() => {});
@@ -61,7 +58,14 @@ export default function Categories() {
             <div className="col" key={cat.id || i}>
               <div className="ul-event-item" style={{ borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.06)', background: '#fff' }}>
                 <div className="ul-event-item-img" style={{ height: '240px' }}>
-                  <img src={cat.image || IMG_FALLBACKS[i % IMG_FALLBACKS.length]} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img
+                    src={cat.image || cat.localImage}
+                    alt={cat.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      if (cat.localImage && e.target.src !== cat.localImage) e.target.src = cat.localImage;
+                    }}
+                  />
                 </div>
                 <div className="ul-event-item-content" style={{ padding: '30px' }}>
                   <div className="ul-event-item-txt">
@@ -91,9 +95,6 @@ export default function Categories() {
           ))}
         </div>
       </div>
-
-      {/* Background vector */}
-      <div className="ul-events-vectors d-none d-lg-block" style={{ backgroundImage: eventBg ? `url(${eventBg})` : 'none', opacity: 0.05 }} />
     </section>
   );
 }
