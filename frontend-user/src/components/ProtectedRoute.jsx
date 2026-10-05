@@ -1,25 +1,19 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
-        <div>Loading...</div>
-      </div>
-    );
+    return <div className="ls-route-loading" aria-busy="true" />;
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    // Remember where the user was heading so login can send them back.
+    const from = `${location.pathname}${location.search}`;
+    return <Navigate to="/login" replace state={{ from }} />;
   }
 
   return children;

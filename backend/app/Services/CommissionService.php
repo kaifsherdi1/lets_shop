@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
+use App\Jobs\ProcessCommissionPayment;
 use App\Repositories\CommissionRepository;
-use Illuminate\Support\Facades\DB;
-use Exception;
 
 class CommissionService
 {
@@ -38,26 +38,31 @@ class CommissionService
     $commission = $this->commissionRepository->findOrFail($commissionId, ['*'], ['orderItem.order', 'distributor']);
 
     if ($commission->status !== 'pending') {
-      throw new Exception('Commission is not pending', 400);
+      throw new BusinessException('Commission is not pending.', 409);
     }
 
-    // Dispatch job for asynchronous processing
-    \App\Jobs\ProcessCommissionPayment::dispatch($commission, $adminId);
+    if ($commission->orderItem?->order?->order_status !== 'delivered') {
+      throw new BusinessException('Commissions can only be approved once the order has been delivered.', 422);
+    }
 
-    return $commission;
+    // Run now, in this request, so the response reflects the real outcome and
+    // nothing depends on a queue worker being deployed.
+    ProcessCommissionPayment::dispatchSync($commission->id, $adminId);
+
+    return $commission->fresh(['orderItem.order', 'distributor']);
   }
 
   public function bulkApprove(array $ids, int $adminId)
   {
-    $results = ['approved' => 0, 'failed' => 0];
+    $results = ['approved' => 0, 'failed' => 0, 'errors' => []];
 
     foreach ($ids as $id) {
       try {
         $this->approveCommission($id, $adminId);
         $results['approved']++;
-      }
-      catch (Exception $e) {
+      } catch (BusinessException $e) {
         $results['failed']++;
+        $results['errors'][$id] = $e->getMessage();
       }
     }
 

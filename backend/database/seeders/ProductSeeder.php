@@ -14,6 +14,13 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
+        // The demo catalogue can be switched off for a real launch.
+        if (! filter_var(env('SEED_DEMO_CATALOG', true), FILTER_VALIDATE_BOOLEAN)) {
+            $this->command?->info('SEED_DEMO_CATALOG is off — skipping demo products.');
+
+            return;
+        }
+
         $distributorRole = Role::where('slug', 'distributor')->first();
         if (! $distributorRole) {
             $this->command->error('Distributor role not found. Run RoleSeeder first.');
@@ -21,16 +28,29 @@ class ProductSeeder extends Seeder
             return;
         }
 
+        // Only local development gets the well-known demo login. Anywhere else
+        // the demo vendor owns the catalogue but gets an unguessable password.
+        $isLocal = app()->environment('local', 'testing');
+        $demoPassword = $isLocal ? 'password' : Str::random(40);
+
         $distributor = User::where('role_id', $distributorRole->id)->first()
             ?? User::create([
                 'name' => 'Demo Distributor',
                 'full_name' => 'Demo Distributor',
                 'email' => 'distributor@letsshop.com',
-                'password' => bcrypt('password'),
+                'password' => bcrypt($demoPassword),
                 'phone' => '1234567890',
                 'role_id' => $distributorRole->id,
                 'status' => 'active',
             ]);
+
+        // Rotate the password on databases seeded before this fix.
+        if (! $isLocal && \Illuminate\Support\Facades\Hash::check('password', $distributor->password)) {
+            $distributor->forceFill(['password' => bcrypt(Str::random(40))])->save();
+            $distributor->tokens()->delete();
+        }
+
+        \App\Models\Wallet::firstOrCreate(['user_id' => $distributor->id, 'currency' => 'AED'], ['balance' => 0]);
 
         $catalog = json_decode(File::get(__DIR__ . '/data/products.json'), true) ?: [];
         $categories = Category::pluck('id', 'slug');

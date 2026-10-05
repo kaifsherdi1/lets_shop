@@ -4,7 +4,8 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext.jsx';
 import { money, shortDate } from '../utils/format.js';
 
-const STAFF_ROLES = ['admin', 'manager', 'accountant'];
+// Matches the API: withdrawal processing is role:admin,accountant.
+const STAFF_ROLES = ['admin', 'accountant'];
 
 const STATUS_BADGE = {
   pending: <span className="badge badge-yellow">⏳ Pending</span>,

@@ -1,155 +1,90 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { formatCurrency } from '../../utils/currency';
 import ProductImage from './ProductImage';
+import Tilt from '../motion/Tilt';
+import './ProductCard.css';
 
 /**
- * ProductCard — styled to closely match the Charitics template donation card:
- * - Image top with category badge (orange pill, top-left)
- * - White body: name, short description, price, stock
- * - Bottom: "Shop Now →" arrow link (like "Donate now →") + "Add to Cart" pill
+ * ProductCard — template donation-card layout with a 3D tilt, glare, zooming
+ * image and an animated add-to-cart button.
  */
 const ProductCard = ({ product, currency, onAddToCart, isAuthenticated }) => {
   const price = currency === 'INR' ? product.price_inr : product.price_aed;
   const inStock = product.stock_quantity > 0;
+  // 'idle' | 'busy' (request in flight — blocks double clicks) | 'added'
+  const [state, setState] = useState('idle');
+
+  const handleAdd = async () => {
+    if (!inStock || state !== 'idle') return;
+    setState('busy');
+    const ok = await onAddToCart(product.id);
+    if (ok) {
+      setState('added');
+      setTimeout(() => setState('idle'), 1200);
+    } else {
+      setState('idle');
+    }
+  };
 
   return (
-    <div style={{
-      background: '#fff',
-      borderRadius: '14px',
-      overflow: 'hidden',
-      boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
-      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-      display: 'flex', flexDirection: 'column',
-      height: '100%',
-    }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-6px)';
-        e.currentTarget.style.boxShadow = '0 14px 40px rgba(0,0,0,0.13)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 2px 16px rgba(0,0,0,0.07)';
-      }}
-    >
-      {/* ── Image area ── */}
-      <div style={{ position: 'relative', paddingTop: '62%', background: '#e9edf0', overflow: 'hidden' }}>
-        <ProductImage
-          product={product}
-          style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%',
-            objectFit: 'cover', transition: 'transform 0.6s ease',
-          }}
-        />
+    <Tilt max={7} scale={1.025} radius={20}>
+      <div className="ls-pcard">
+        {/* ── Image area ── */}
+        <Link to={`/products/${product.id}`} className="ls-pcard-media" tabIndex={-1} aria-hidden="true">
+          <ProductImage product={product} className="ls-pcard-img" />
+          <span className="ls-pcard-shade" />
 
-        {/* Category tag — orange pill, top-left (matches template) */}
-        {product.category?.name && (
-          <span style={{
-            position: 'absolute', top: '12px', left: '12px',
-            background: 'var(--ul-primary)', color: '#fff',
-            padding: '4px 13px', borderRadius: '999px',
-            fontSize: '0.73rem', fontWeight: 700, letterSpacing: '0.02em',
-          }}>
-            {product.category.name}
-          </span>
-        )}
+          {product.category?.name && <span className="ls-pcard-tag ls-depth">{product.category.name}</span>}
 
-        {/* Out of stock overlay */}
-        {!inStock && (
-          <div style={{
-            position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{ background: '#e53e3e', color: '#fff', padding: '6px 18px', borderRadius: '999px', fontWeight: 700, fontSize: '0.82rem' }}>
-              Out of Stock
-            </span>
-          </div>
-        )}
-      </div>
+          {inStock && <span className="ls-pcard-quick">Quick view →</span>}
 
-      {/* ── Content ── */}
-      <div style={{ padding: '18px 18px 16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Product name */}
-        <h3 style={{
-          fontFamily: 'var(--font-quicksand)', fontWeight: 700,
-          fontSize: '1rem', color: 'var(--ul-black)',
-          marginBottom: '8px', letterSpacing: '-0.02em', lineHeight: 1.3,
-          display: '-webkit-box', WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical', overflow: 'hidden',
-        }}>
-          {product.name}
-        </h3>
+          {!inStock && (
+            <div className="ls-pcard-out">
+              <span>Out of Stock</span>
+            </div>
+          )}
+        </Link>
 
-        {/* Short description — like template's card body text */}
-        {product.description && (
-          <p style={{
-            color: 'var(--ul-gray)', fontSize: '0.82rem', lineHeight: 1.6,
-            marginBottom: '14px',
-            display: '-webkit-box', WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical', overflow: 'hidden',
-          }}>
-            {product.description}
-          </p>
-        )}
+        {/* ── Content ── */}
+        <div className="ls-pcard-body">
+          <h3 className="ls-pcard-title">
+            <Link to={`/products/${product.id}`}>{product.name}</Link>
+          </h3>
 
-        <div style={{ marginTop: 'auto' }}>
-          {/* Price row */}
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginBottom: '14px',
-          }}>
-            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--ul-primary)' }}>
-              {formatCurrency(price, currency)}
-            </span>
-            {inStock && (
-              <span style={{ fontSize: '0.75rem', color: '#38a169', fontWeight: 600, background: '#e6ffed', padding: '3px 10px', borderRadius: '999px' }}>
-                ✓ {product.stock_quantity} left
-              </span>
-            )}
-          </div>
+          {product.description && <p className="ls-pcard-descr">{product.description}</p>}
 
-          {/* Divider */}
-          <div style={{ height: '1px', background: 'var(--ul-gray3)', marginBottom: '14px' }} />
+          <div style={{ marginTop: 'auto' }}>
+            <div className="ls-pcard-price-row">
+              <span className="ls-pcard-price">{formatCurrency(price, currency)}</span>
+              {inStock && <span className="ls-pcard-stock">✓ {product.stock_quantity} left</span>}
+            </div>
 
-          {/* Action row — matches template "Donate now →" style */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Link
-              to={`/products/${product.id}`}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                color: 'var(--ul-black)', fontWeight: 700, fontSize: '0.88rem',
-                transition: 'color 0.3s ease',
-              }}
-              onMouseEnter={e => e.currentTarget.style.color = 'var(--ul-primary)'}
-              onMouseLeave={e => e.currentTarget.style.color = 'var(--ul-black)'}
-            >
-              View Details
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: '26px', height: '26px', borderRadius: '50%',
-                background: 'var(--ul-primary)', color: '#fff', fontSize: '0.75rem',
-              }}>→</span>
-            </Link>
+            <div className="ls-pcard-divider" />
 
-            <button
-              onClick={() => onAddToCart(product.id)}
-              disabled={!inStock}
-              style={{
-                background: inStock ? 'var(--ul-black)' : 'var(--ul-gray2)',
-                color: '#fff', border: 'none', borderRadius: '999px',
-                padding: '8px 18px', fontWeight: 700, fontSize: '0.82rem',
-                cursor: inStock ? 'pointer' : 'not-allowed',
-                transition: 'background 0.3s ease',
-              }}
-              onMouseEnter={e => { if (inStock) e.currentTarget.style.background = 'var(--ul-primary)'; }}
-              onMouseLeave={e => { if (inStock) e.currentTarget.style.background = 'var(--ul-black)'; }}
-            >
-              {inStock ? 'Add to Cart' : 'Sold Out'}
-            </button>
+            <div className="ls-pcard-actions">
+              <Link to={`/products/${product.id}`} className="ls-pcard-link">
+                View Details
+                <span className="ls-pcard-link-arrow">→</span>
+              </Link>
+
+              <motion.button
+                type="button"
+                onClick={handleAdd}
+                disabled={!inStock || state === 'busy'}
+                aria-busy={state === 'busy'}
+                className={`ls-pcard-add${state === 'added' ? ' is-adding' : ''}`}
+                whileTap={inStock ? { scale: 0.9 } : undefined}
+                title={!isAuthenticated && inStock ? 'Sign in to add to cart' : undefined}
+              >
+                {!inStock ? 'Sold Out' : state === 'busy' ? 'Adding…' : state === 'added' ? '✓ Added' : 'Add to Cart'}
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Tilt>
   );
 };
 

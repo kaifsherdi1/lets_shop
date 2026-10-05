@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-import footerVector from '../../assets/images/footer-vector-img.png';
+import footerVector from '../../assets/images/footer-vector-img.webp';
 import BrandMark from './BrandMark';
+import { Reveal } from '../motion/Reveal';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -24,7 +25,7 @@ export default function Footer() {
       {/* Footer Top — Contact Info Bar */}
       <div className="ul-footer-top" style={{ padding: '40px 0' }}>
         <div className="ul-footer-container">
-          <div
+          <Reveal
             className="ul-footer-top-contact-infos"
             style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '28px' }}
           >
@@ -72,14 +73,14 @@ export default function Footer() {
                 </div>
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       </div>
 
       {/* Footer Middle */}
       <div className="ul-footer-middle" style={{ padding: '80px 0' }}>
         <div className="ul-footer-container">
-          <div className="ul-footer-middle-wrapper" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '50px' }}>
+          <Reveal className="ul-footer-middle-wrapper" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '50px' }}>
             <div className="ul-footer-about">
               <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
                 <BrandMark size={35} />
@@ -103,6 +104,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={s.label}
+                    className="ls-social"
                     style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
                   >
                     <i className={s.icon}></i>
@@ -143,7 +145,7 @@ export default function Footer() {
                 <button type="submit" aria-label="Subscribe" style={{ position: 'absolute', right: '5px', top: '5px', width: '45px', height: '45px', borderRadius: '50%', background: 'var(--ul-primary)', color: '#fff', border: 'none', cursor: 'pointer' }}><i className="flaticon-next"></i></button>
               </form>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
 

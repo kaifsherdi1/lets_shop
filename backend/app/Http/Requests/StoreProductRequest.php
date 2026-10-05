@@ -8,10 +8,21 @@ class StoreProductRequest extends FormRequest
 {
   public function authorize(): bool
   {
-    // Agents and Distributors can create products, Admins always can
-    return $this->user()->isAdmin()
-        || $this->user()->hasRole('distributor')
-        || $this->user()->hasRole('agent');
+    // Catalogue staff (admin, manager) and vendors (distributor, agent) —
+    // matching the route's role middleware.
+    return $this->user()->hasAnyRole(['admin', 'manager', 'distributor', 'agent']);
+  }
+
+  public function withValidator($validator): void
+  {
+    $validator->after(function ($validator) {
+      if ($validator->errors()->isNotEmpty()) {
+        return;
+      }
+      foreach (\App\Models\Product::pricingErrors($this->all()) as $field => $message) {
+        $validator->errors()->add($field, $message);
+      }
+    });
   }
 
   public function rules(): array

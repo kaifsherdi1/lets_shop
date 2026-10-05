@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { authAPI } from '../api/auth';
+import { AUTH_EXPIRED_EVENT } from '../api/axios';
 
 const AuthContext = createContext(null);
 
@@ -16,17 +17,26 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
+  // The API client signals an expired/revoked token; sign out locally (it has
+  // already cleared storage) without a full page reload.
+  useEffect(() => {
+    const onExpired = () => {
+      setToken(null);
+      setUser(null);
+    };
+    window.addEventListener(AUTH_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onExpired);
+  }, []);
+
   const fetchUser = async () => {
     try {
       const data = await authAPI.me();
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
     } catch (error) {
-      console.error('Failed to fetch user:', error);
-      // If 401 Unauthorized (token expired), auto-logout
-      if (error.response?.status === 401) {
-        logout();
-      }
+      // 401s are handled by the API client's AUTH_EXPIRED_EVENT. Log only the
+      // message — the full error object carries the bearer token in its config.
+      console.error('Failed to fetch user:', error.message);
     } finally {
       setLoading(false);
     }

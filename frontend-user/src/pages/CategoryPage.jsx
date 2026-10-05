@@ -5,7 +5,7 @@ import { productsBanner } from '../assets/banners';
 import ProductCard from '../components/product/ProductCard';
 import { productAPI } from '../api/products';
 import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
+import useAddToCart from '../hooks/useAddToCart';
 import toast from 'react-hot-toast';
 
 export default function CategoryPage() {
@@ -15,7 +15,6 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(true);
   const { currency } = useOutletContext() || { currency: 'AED' };
   const { isAuthenticated } = useAuth();
-  const { addToCart } = useCart();
 
   useEffect(() => {
     setLoading(true);
@@ -43,18 +42,7 @@ export default function CategoryPage() {
     fetchCategoryAndProducts();
   }, [slug]);
 
-  const handleAddToCart = async (productId) => {
-    if (!isAuthenticated) {
-      toast.error('Please login to add to cart');
-      return;
-    }
-    try {
-      await addToCart(productId, 1);
-      toast.success('Added to cart!');
-    } catch (error) {
-      toast.error('Failed to add to cart');
-    }
-  };
+  const handleAddToCart = useAddToCart();
 
   return (
     <main>

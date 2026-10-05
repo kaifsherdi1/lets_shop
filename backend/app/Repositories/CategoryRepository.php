@@ -10,6 +10,7 @@ class CategoryRepository extends BaseRepository
 {
   const CACHE_KEY = 'categories_all';
   const CACHE_TTL = 3600; // 1 hour
+  const VERSION_KEY = 'categories_cache_version';
 
   public function __construct(Category $model)
   {
@@ -21,7 +22,7 @@ class CategoryRepository extends BaseRepository
    */
   public function allCached(array $relations = []): Collection
   {
-    $cacheKey = self::CACHE_KEY . '_' . implode('_', $relations);
+    $cacheKey = self::CACHE_KEY . '_v' . (int) Cache::get(self::VERSION_KEY, 1) . '_' . implode('_', $relations);
 
     return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($relations) {
       return $this->all(['*'], $relations);
@@ -33,7 +34,7 @@ class CategoryRepository extends BaseRepository
    */
   public function getRootCategories(array $relations = []): Collection
   {
-    $cacheKey = self::CACHE_KEY . '_root_' . implode('_', $relations);
+    $cacheKey = self::CACHE_KEY . '_v' . (int) Cache::get(self::VERSION_KEY, 1) . '_root_' . implode('_', $relations);
 
     return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($relations) {
       return $this->model->with($relations)
@@ -48,10 +49,9 @@ class CategoryRepository extends BaseRepository
    */
   public function clearCache(): void
   {
-    // For simplicity, we clear all category related keys. 
-    // In a more complex app, we might use tags.
-    Cache::forget(self::CACHE_KEY);
-  // We could also clear specific relation keys if we track them.
+    // The version is part of every category cache key, so bumping it
+    // invalidates all cached category lists (root, with relations, …).
+    Cache::forever(self::VERSION_KEY, (int) Cache::get(self::VERSION_KEY, 1) + 1);
   }
 
   public function create(array $data): \Illuminate\Database\Eloquent\Model

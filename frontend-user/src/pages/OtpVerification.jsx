@@ -14,7 +14,9 @@ const OtpVerification = () => {
   const { isAuthenticated, refreshUser } = useAuth();
   const email = location.state?.email || '';
 
-  const debugOtp = location.state?.debugOtp || '';
+  // Development builds only: production bundles never surface a code, even if
+  // a misconfigured API were to return one.
+  const debugOtp = import.meta.env.DEV ? location.state?.debugOtp || '' : '';
 
   useEffect(() => {
     if (debugOtp) {

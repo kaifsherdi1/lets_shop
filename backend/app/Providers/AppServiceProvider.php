@@ -19,17 +19,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // API routes are registered once, in bootstrap/app.php (withRouting).
         $this->configureRateLimiting();
-
-        \Illuminate\Support\Facades\Route::prefix('api')
-            ->middleware('api')
-            ->group(base_path('routes/api.php'));
     }
 
     protected function configureRateLimiting(): void
     {
         \Illuminate\Support\Facades\RateLimiter::for ('api', function (\Illuminate\Http\Request $request) {
-            $user = $request->user();
+            // Bearer tokens are resolved by the sanctum guard, which has not run
+            // yet when the throttle middleware evaluates the limit.
+            $user = $request->user('sanctum');
 
             if ($user) {
                 if ($user->isAdmin())
@@ -44,8 +43,9 @@ class AppServiceProvider extends ServiceProvider
                 return \Illuminate\Cache\RateLimiting\Limit::perMinute(300)->by($user->id);
             }
 
-            // Guests (60/min)
-            return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by($request->ip());
+            // Guests (120/min — a storefront page makes several calls, and
+            // shoppers behind one office/mobile NAT share an IP)
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(120)->by($request->ip());
         });
 
         // Specialized rate limiter for authentication

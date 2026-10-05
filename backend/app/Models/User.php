@@ -57,9 +57,16 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    /** The AED wallet (the store's default currency). */
     public function wallet()
     {
-        return $this->hasOne(Wallet::class);
+        return $this->hasOne(Wallet::class)->where('currency', 'AED');
+    }
+
+    /** One wallet per currency the user has earned in. */
+    public function wallets()
+    {
+        return $this->hasMany(Wallet::class);
     }
 
     public function cart()

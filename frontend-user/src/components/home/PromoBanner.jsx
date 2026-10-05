@@ -1,53 +1,71 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Reveal, SplitText, Stagger, StaggerItem } from '../motion/Reveal';
+import Tilt from '../motion/Tilt';
+import Magnetic from '../motion/Magnetic';
+
+const BENEFITS = [
+  { icon: 'flaticon-package', title: 'Free Delivery', desc: 'On every order, UAE & India' },
+  { icon: 'flaticon-love', title: '24/7 Priority Support', desc: 'Dedicated customer care' },
+  { icon: 'flaticon-checked', title: 'Secure Payments', desc: 'Fully encrypted transactions' },
+  { icon: 'flaticon-back', title: '14-Day Returns', desc: 'Hassle-free money back' },
+];
 
 export default function PromoBanner() {
   return (
     <section className="ul-donate-form-section ul-section-spacing" style={{ position: 'relative', overflow: 'hidden' }}>
       <div className="ul-container">
-        <div className="ul-donate-form-wrapper" style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', alignItems: 'center' }}>
-          {/* Form Side */}
-           <div className="ul-donate-form-box" style={{ flex: '1 1 450px', background: 'var(--ul-primary)', borderRadius: '32px', padding: '40px', boxShadow: '0 20px 60px rgba(118, 176, 171, 0.2)' }}>
-            <span className="ul-section-sub-title" style={{ color: '#fff', opacity: 0.9 }}>Value Plus</span>
-            <h3 className="ul-donate-form-title" style={{ color: '#fff', fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 800, marginBottom: '30px' }}>Exclusive Membership Benefits</h3>
+        <div className="ul-donate-form-wrapper" style={{ display: 'flex', flexWrap: 'wrap', gap: '50px', alignItems: 'center' }}>
+          {/* Membership card */}
+          <Reveal from="flip" duration={1.1} style={{ flex: '1 1 450px' }}>
+            <Tilt max={6} scale={1.01} radius={32}>
+              <div className="ls-promo-card">
+                <span className="ls-promo-glow" aria-hidden="true" />
+                <span className="ul-section-sub-title" style={{ color: '#fff', opacity: 0.9 }}>Value Plus</span>
+                <h3 className="ls-promo-title ls-depth">Exclusive Membership Benefits</h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {[
-                { icon: 'flaticon-delivery-truck', title: 'Free Delivery', desc: 'On every order, UAE & India' },
-                { icon: 'flaticon-love', title: '24/7 Priority Support', desc: 'Dedicated customer care' },
-                { icon: 'flaticon-shield', title: 'Secure Payments', desc: 'Fully encrypted transactions' },
-                { icon: 'flaticon-back', title: '14-Day Returns', desc: 'Hassle-free money back' }
-              ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#fff' }}>
-                    <i className={item.icon}></i>
-                  </div>
-                  <div>
-                    <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, margin: 0 }}>{item.title}</h4>
-                    <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', margin: 0 }}>{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                <Stagger gap={0.1} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {BENEFITS.map((item) => (
+                    <StaggerItem key={item.title} className="ls-promo-item">
+                      <span className="icon"><i className={item.icon}></i></span>
+                      <div>
+                        <h4>{item.title}</h4>
+                        <p>{item.desc}</p>
+                      </div>
+                    </StaggerItem>
+                  ))}
+                </Stagger>
 
-            <Link to="/register" className="ul-btn" style={{ width: '100%', background: 'var(--ul-black)', color: '#fff', justifyContent: 'center', height: '56px', marginTop: '30px' }}>
-              <i className="flaticon-fast-forward-double-right-arrows-symbol"></i> Join The Club
-            </Link>
-          </div>
+                <Link to="/register" className="ul-btn ls-btn-shine ls-promo-btn">
+                  <i className="flaticon-fast-forward-double-right-arrows-symbol"></i> Join The Club
+                </Link>
+              </div>
+            </Tilt>
+          </Reveal>
 
-          {/* Text Side */}
+          {/* Text side */}
           <div className="ul-donate-form-txt" style={{ flex: '1 1 400px' }}>
-            <span className="ul-section-sub-title" style={{ background: 'rgba(118, 176, 171, 0.08)', color: 'var(--ul-primary)', padding: '6px 16px', borderRadius: '999px', display: 'inline-block', marginBottom: '12px' }}>
-              Why Shop With Us
-            </span>
-            <h2 className="ul-section-title" style={{ marginBottom: '20px' }}>Premium Quality, Unbeatable Prices</h2>
-            <p className="ul-section-descr" style={{ marginBottom: '32px', color: 'var(--ul-gray)', lineHeight: 1.8 }}>
-              We offer a curated selection of high-quality products at competitive prices.
-              Every purchase is backed by our guarantee of authenticity and fast delivery across UAE and India.
-            </p>
-            <Link to="/about" className="ul-btn ul-btn--outline" style={{ border: '2px solid var(--ul-primary)', background: 'transparent', color: 'var(--ul-primary)' }}>
-              <i className="flaticon-fast-forward-double-right-arrows-symbol"></i> Learn Our Story
-            </Link>
+            <Reveal><span className="ls-eyebrow">Why Shop With Us</span></Reveal>
+            <SplitText
+              as="h2"
+              className="ul-section-title"
+              style={{ marginBottom: '20px' }}
+              text="Premium Quality, Unbeatable Prices"
+              highlight={['Unbeatable']}
+            />
+            <Reveal delay={0.15}>
+              <p className="ul-section-descr" style={{ marginBottom: '32px', color: 'var(--ul-gray)', lineHeight: 1.8 }}>
+                We offer a curated selection of high-quality products at competitive prices.
+                Every purchase is backed by our guarantee of authenticity and fast delivery across UAE and India.
+              </p>
+            </Reveal>
+            <Reveal delay={0.25}>
+              <Magnetic>
+                <Link to="/about" className="ul-btn ul-btn--outline" style={{ border: '2px solid var(--ul-primary)', background: 'transparent', color: '#fff' }}>
+                  <i className="flaticon-fast-forward-double-right-arrows-symbol"></i> Learn Our Story
+                </Link>
+              </Magnetic>
+            </Reveal>
           </div>
         </div>
       </div>

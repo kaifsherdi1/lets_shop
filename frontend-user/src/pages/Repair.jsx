@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import PageBanner from '../components/layout/PageBanner';
 import { servicesBanner } from '../assets/banners';
 
-import service1 from '../assets/images/service-repair.png';
-import service2 from '../assets/images/service-components.png';
-import service3 from '../assets/images/service-diagnostic.png';
-import service4 from '../assets/images/service-software.png';
-import whyJoin from '../assets/images/service-why.png';
+import service1 from '../assets/images/service-repair.webp';
+import service2 from '../assets/images/service-components.webp';
+import service3 from '../assets/images/service-diagnostic.webp';
+import service4 from '../assets/images/service-software.webp';
+import whyJoin from '../assets/images/service-why.webp';
 
 const SERVICES = [
   { id: 1, img: service1, title: 'Expert Repair Service', desc: 'Professional repair for all your devices and products. Fast turnaround and quality guaranteed.' },

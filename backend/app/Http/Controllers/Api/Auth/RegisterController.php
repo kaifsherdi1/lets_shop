@@ -77,7 +77,9 @@ class RegisterController extends Controller
             ],
             'token' => $token,
             'otp_required' => true,
-            'debug_otp' => config('app.debug') ? $otpCode : null
+            // Local development only — never tied to APP_DEBUG, which can be
+            // switched on in production by mistake.
+            'debug_otp' => app()->environment('local') ? $otpCode : null
         ], 201);
     }
 }

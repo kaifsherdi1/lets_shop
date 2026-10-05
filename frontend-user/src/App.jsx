@@ -1,37 +1,40 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
-import OtpVerification from './pages/OtpVerification';
+// Home ships in the main bundle (it is the landing page); every other page is
+// split into its own chunk and fetched on first visit.
 import Home from './pages/Home';
-import Products from './pages/Products';
-import ProductDetail from './pages/ProductDetail';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import Orders from './pages/Orders';
-import Profile from './pages/Profile';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import CategoryPage from './pages/CategoryPage';
-import Repair from './pages/Repair';
-import Replacement from './pages/Replacement';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
-import NotFound from './pages/NotFound';
 import MainLayout from './components/layout/MainLayout';
+import { MotionConfig } from 'framer-motion';
+
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const OtpVerification = lazy(() => import('./pages/OtpVerification'));
+const Products = lazy(() => import('./pages/Products'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const Orders = lazy(() => import('./pages/Orders'));
+const Profile = lazy(() => import('./pages/Profile'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const CategoryPage = lazy(() => import('./pages/CategoryPage'));
+const Repair = lazy(() => import('./pages/Repair'));
+const Replacement = lazy(() => import('./pages/Replacement'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 import { Toaster } from 'react-hot-toast';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
   React.useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    window.scrollTo(0, 0);
   }, [pathname]);
   return null;
 }
@@ -39,11 +42,13 @@ function ScrollToTop() {
 function App() {
   return (
     <BrowserRouter>
+      <MotionConfig reducedMotion="user">
       <ErrorBoundary>
         <AuthProvider>
           <CartProvider>
             <ScrollToTop />
             <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
+            <Suspense fallback={<div className="ls-route-loading" aria-busy="true" />}>
             <Routes>
               {/* Auth routes (no MainLayout) */}
               <Route path="/login" element={<Login />} />
@@ -103,9 +108,11 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
+            </Suspense>
           </CartProvider>
         </AuthProvider>
       </ErrorBoundary>
+      </MotionConfig>
     </BrowserRouter>
   );
 }

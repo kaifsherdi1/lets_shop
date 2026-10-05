@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Cache;
 class ProductRepository extends BaseRepository
 {
   const CACHE_KEY = 'products';
-  const CACHE_TTL = 3600;
+  const CACHE_TTL = 600;
+  const VERSION_KEY = 'products_cache_version';
 
   public function __construct(Product $model)
   {
@@ -22,11 +23,12 @@ class ProductRepository extends BaseRepository
    */
   public function paginateCached(int $perPage = 15, array $relations = [], array $filters = []): LengthAwarePaginator
   {
-    $page = request()->get('page', 1);
+    $page = max((int) request()->get('page', 1), 1);
     $filterKey = md5(serialize($filters));
-    $cacheKey = self::CACHE_KEY . "_page_{$page}_{$perPage}_{$filterKey}_" . implode('_', $relations);
+    $version = (int) Cache::get(self::VERSION_KEY, 1);
+    $cacheKey = self::CACHE_KEY . "_v{$version}_page_{$page}_{$perPage}_{$filterKey}_" . implode('_', $relations);
 
-    return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($perPage, $relations, $filters) {
+    $load = function () use ($perPage, $relations, $filters) {
       $query = $this->model->with($relations)
         ->active()
         ->inStock();
@@ -50,7 +52,14 @@ class ProductRepository extends BaseRepository
           }
 
           return $query->orderBy('created_at', 'desc')->paginate($perPage);
-        });
+        };
+
+    // Free-text searches are not cached: every distinct term would add a row.
+    if (! empty($filters['search'])) {
+      return $load();
+    }
+
+    return Cache::remember($cacheKey, self::CACHE_TTL, $load);
   }
 
   /**
@@ -68,9 +77,17 @@ class ProductRepository extends BaseRepository
    */
   public function clearCache(): void
   {
-  // Ideally use tags, but for now we clear generic keys or documented patterns
-  // Cache::tags(['products'])->flush();
-  // Since we aren't using tags yet, we rely on TTL or manual flush if needed.
+    self::bumpCacheVersion();
+  }
+
+  /**
+   * Invalidate every cached product listing at once: the version is part of
+   * each cache key, so bumping it makes all old entries unreachable (they
+   * expire on their own). Called on product writes and on stock changes.
+   */
+  public static function bumpCacheVersion(): void
+  {
+    Cache::forever(self::VERSION_KEY, (int) Cache::get(self::VERSION_KEY, 1) + 1);
   }
 
   public function create(array $data): \Illuminate\Database\Eloquent\Model

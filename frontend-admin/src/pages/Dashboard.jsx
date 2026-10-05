@@ -40,10 +40,14 @@ export default function Dashboard() {
   const [chart, setChart] = useState([]);
   const [chartReal, setChartReal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     Promise.all([
-      axios.get('/admin/stats').then((r) => setS(r.data)).catch(() => {}),
+      axios.get('/admin/stats').then((r) => setS(r.data)).catch((err) => {
+        // Never present a failed load as "all zeros / all caught up".
+        setError(err.response?.data?.message || 'Could not load dashboard figures. Please refresh.');
+      }),
       axios.get('/admin/monthly-stats').then((r) => {
         if (Array.isArray(r.data) && r.data.length) {
           setChart(r.data);
@@ -53,11 +57,14 @@ export default function Dashboard() {
     ]).finally(() => setLoading(false));
   }, []);
 
+  // AED and INR are separate money — show each, never their sum.
+  const bothCurrencies = (byCur) => (byCur ? `${money(byCur.AED, 'AED')} · ${money(byCur.INR, 'INR')}` : '');
+
   const kpis = [
     {
-      label: 'Gross Revenue', icon: Ic.cash,
-      value: money(s?.total_revenue, 'AED'),
-      sub: s ? `₹${Number(s.revenue_by_currency?.INR || 0).toLocaleString('en-IN')} · AED ${Number(s.revenue_by_currency?.AED || 0).toLocaleString('en-IN')}` : '',
+      label: 'Gross Revenue (AED)', icon: Ic.cash,
+      value: money(s?.revenue_by_currency?.AED, 'AED'),
+      sub: s ? `+ ${money(s.revenue_by_currency?.INR, 'INR')} in INR orders` : '',
     },
     {
       label: 'Orders', icon: Ic.cart, value: (s?.total_orders ?? 0).toLocaleString(),
@@ -84,8 +91,8 @@ export default function Dashboard() {
   ];
 
   const actions = [
-    { n: s?.pending_commissions, label: 'commissions awaiting approval', extra: s && money(s.pending_commission_value, 'AED'), to: '/commissions' },
-    { n: s?.pending_withdrawals, label: 'withdrawal requests to process', extra: s && money(s.pending_withdrawal_value, 'AED'), to: '/withdrawals' },
+    { n: s?.pending_commissions, label: 'commissions awaiting approval', extra: s && bothCurrencies(s.pending_commission_value_by_currency), to: '/commissions' },
+    { n: s?.pending_withdrawals, label: 'withdrawal requests to process', extra: s && bothCurrencies(s.pending_withdrawal_value_by_currency), to: '/withdrawals' },
     { n: s?.out_of_stock_products, label: 'products out of stock', to: '/products' },
     { n: s?.low_stock_products, label: 'products low on stock', to: '/products' },
     { n: s?.unverified_users, label: 'users with unverified email', to: '/users' },
@@ -97,6 +104,11 @@ export default function Dashboard() {
 
   return (
     <div>
+      {error && (
+        <div role="alert" style={{ background: '#fff5f5', border: '1px solid #feb2b2', color: '#c53030', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontWeight: 600 }}>
+          {error}
+        </div>
+      )}
       {/* KPI row */}
       <div
         style={{

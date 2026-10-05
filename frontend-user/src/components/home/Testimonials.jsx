@@ -1,10 +1,13 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Reveal, SplitText, EASE } from '../motion/Reveal';
+import Tilt from '../motion/Tilt';
 
-import testimonialAvatar1 from '../../assets/images/user-1.png';
-import testimonialAvatar2 from '../../assets/images/user-2.png';
-import testimonialAvatar3 from '../../assets/images/user-3.png';
-import testimonialAvatar4 from '../../assets/images/user-4.png';
+import testimonialAvatar1 from '../../assets/images/user-1.webp';
+import testimonialAvatar2 from '../../assets/images/user-2.webp';
+import testimonialAvatar3 from '../../assets/images/user-3.webp';
+import testimonialAvatar4 from '../../assets/images/user-4.webp';
 
 const TESTIMONIALS = [
   {
@@ -33,146 +36,150 @@ const TESTIMONIALS = [
   },
 ];
 
+const BARS = [92, 60, 20, 8, 3];
+
 export default function Testimonials() {
   const [current, setCurrent] = useState(0);
-  const sliderRef = useRef(null);
+  const [paused, setPaused] = useState(false);
+  const count = TESTIMONIALS.length;
 
-  function goTo(idx) {
-    if (!sliderRef.current) return;
-    setCurrent(idx);
-    const itemWidth = sliderRef.current.querySelector('.ul-testimonial-item')?.offsetWidth || sliderRef.current.offsetWidth;
-    sliderRef.current.scrollTo({ left: idx * (itemWidth + 24), behavior: 'smooth' });
-  }
+  const goTo = (idx) => setCurrent((idx + count) % count);
+  const prev = () => goTo(current - 1);
+  const next = () => goTo(current + 1);
 
-  function prev() {
-    const next = (current - 1 + TESTIMONIALS.length) % TESTIMONIALS.length;
-    goTo(next);
-  }
-
-  function next() {
-    const n = (current + 1) % TESTIMONIALS.length;
-    goTo(n);
-  }
+  useEffect(() => {
+    if (paused) return undefined;
+    const t = setTimeout(() => setCurrent((c) => (c + 1) % count), 6000);
+    return () => clearTimeout(t);
+  }, [current, paused, count]);
 
   return (
-    <section className="ul-testimonial-2 ul-section-spacing" style={{ background: 'var(--ul-c4)' }}>
+    <section className="ul-testimonial-2 ul-section-spacing" style={{ background: 'var(--ul-c4)', overflow: 'hidden' }}>
       <div className="ul-container">
-        <div className="ul-testimonial-2-wrapper" style={{ display: 'flex', flexWrap: 'wrap', gap: '40px' }}>
-          {/* Rating Overview Card */}
-          <div className="ul-testimonial-2-left" style={{ flex: '1 1 320px' }}>
-            <div className="ul-testimonial-2-rating-overview" style={{ background: '#fff', borderRadius: '24px', padding: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)' }}>
-              <div className="top" style={{ textAlign: 'center', marginBottom: '24px' }}>
-                <h3 className="number" style={{ fontSize: '3.5rem', fontWeight: 800, color: 'var(--ul-primary)' }}>4.9</h3>
-                <div className="stars" style={{ color: '#FFB800', fontSize: '1.2rem', margin: '8px 0' }}>
-                  {[1, 2, 3, 4, 5].map(s => (
-                    <i key={s} className="flaticon-star"></i>
+        <div className="ul-testimonial-2-wrapper" style={{ display: 'flex', flexWrap: 'wrap', gap: '50px', alignItems: 'center' }}>
+          {/* Rating overview */}
+          <Reveal from="right" style={{ flex: '1 1 320px' }}>
+            <Tilt max={7} radius={24}>
+              <div className="ls-rating-card">
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                  <h3 className="ls-rating-number ls-depth">4.9</h3>
+                  <div style={{ color: '#FFB800', fontSize: '1.2rem', margin: '8px 0' }}>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <i key={s} className="flaticon-star"></i>
+                    ))}
+                  </div>
+                  <span style={{ fontSize: '0.9rem', color: 'var(--ul-gray)', fontWeight: 700 }}>Average Rating</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+                  {[5, 4, 3, 2, 1].map((star, i) => (
+                    <div key={star} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ minWidth: '12px', fontSize: '0.85rem', fontWeight: 700 }}>{star}</span>
+                      <i className="flaticon-star" style={{ color: '#FFB800', fontSize: '0.8rem' }}></i>
+                      <div style={{ flex: 1, height: '6px', background: '#F0F0F0', borderRadius: '3px', overflow: 'hidden' }}>
+                        <motion.span
+                          style={{ display: 'block', height: '100%', background: 'var(--ul-gradient)', borderRadius: '3px' }}
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${BARS[i]}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.4, delay: 0.2 + i * 0.1, ease: EASE }}
+                        />
+                      </div>
+                      <span style={{ minWidth: '35px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--ul-gray)', textAlign: 'right' }}>{BARS[i]}%</span>
+                    </div>
                   ))}
                 </div>
-                <span className="txt" style={{ fontSize: '0.9rem', color: 'var(--ul-gray)', fontWeight: 700 }}>Average Rating</span>
+
+                <Link to="/products" className="ul-btn ls-btn-shine" style={{ width: '100%', justifyContent: 'center' }}>
+                  <i className="flaticon-fast-forward-double-right-arrows-symbol"></i> Shop Now
+                </Link>
               </div>
+            </Tilt>
+          </Reveal>
 
-              <div className="progress-bars" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-                {[5, 4, 3, 2, 1].map((star, i) => (
-                  <div className="progress-bar-item" key={star} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span className="star" style={{ minWidth: '12px', fontSize: '0.85rem', fontWeight: 700 }}>{star}</span>
-                    <i className="flaticon-star" style={{ color: '#FFB800', fontSize: '0.8rem' }}></i>
-                    <div className="bar" style={{ flex: 1, height: '6px', background: '#F0F0F0', borderRadius: '3px', position: 'relative' }}>
-                      <span className="fill" style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: 'var(--ul-primary)', borderRadius: '3px', width: ['92%', '60%', '20%', '8%', '3%'][i] }}></span>
-                    </div>
-                    <span className="percent" style={{ minWidth: '35px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--ul-gray)', textAlign: 'right' }}>{['92', '60', '20', '8', '3'][i]}%</span>
-                  </div>
-                ))}
-              </div>
-
-              <Link to="/products" className="ul-btn" style={{ width: '100%', justifyContent: 'center' }}>
-                <i className="flaticon-fast-forward-double-right-arrows-symbol"></i> Shop Now
-              </Link>
-            </div>
-          </div>
-
-          {/* Testimonials Slider */}
-          <div className="ul-testimonial-2-right" style={{ flex: '1 1 500px', overflow: 'hidden' }}>
+          {/* 3D testimonial deck */}
+          <div style={{ flex: '1 1 500px', minWidth: 0 }}>
             <div className="ul-section-heading d-flex flex-wrap align-items-center justify-content-between gy-3">
               <div className="left">
-                <span className="ul-section-sub-title" style={{ background: 'rgba(235, 83, 16, 0.08)', color: 'var(--ul-primary)', padding: '6px 16px', borderRadius: '999px', display: 'inline-block', marginBottom: '12px' }}>
-                  Testimonials
-                </span>
-                <h2 className="ul-section-title">What Our Customers Say</h2>
+                <Reveal><span className="ls-eyebrow">Testimonials</span></Reveal>
+                <SplitText as="h2" className="ul-section-title" text="What Our Customers Say" highlight={['Customers']} />
               </div>
-              <div className="ul-slider-nav d-none d-sm-flex" style={{ visibility: 'visible', gap: '10px' }}>
-                <button className="prev" onClick={prev} aria-label="Previous" style={{ pointerEvents: 'auto', cursor: 'pointer', background: 'var(--ul-primary)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="d-none d-sm-flex" style={{ gap: '10px' }}>
+                <button type="button" className="ls-round-btn" onClick={prev} aria-label="Previous testimonial">
                   <i className="flaticon-back"></i>
                 </button>
-                <button className="next" onClick={next} aria-label="Next" style={{ pointerEvents: 'auto', cursor: 'pointer', background: 'var(--ul-primary)', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button type="button" className="ls-round-btn" onClick={next} aria-label="Next testimonial">
                   <i className="flaticon-next"></i>
                 </button>
               </div>
             </div>
 
             <div
-              ref={sliderRef}
-              style={{
-                display: 'flex',
-                gap: '24px',
-                overflowX: 'auto',
-                scrollSnapType: 'x mandatory',
-                scrollBehavior: 'smooth',
-                marginTop: '24px',
-                WebkitOverflowScrolling: 'touch',
-                padding: '10px 5px 30px',
-              }}
-              className="slider-track"
+              className="ls-deck"
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
             >
-              {TESTIMONIALS.map((t, i) => (
-                <div
-                  key={t.id}
-                  className="ul-testimonial-item"
-                  style={{
-                    flex: '0 0 100%',
-                    scrollSnapAlign: 'start',
-                    background: '#fff',
-                    borderRadius: '24px',
-                    padding: '30px',
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.03)',
-                    display: 'flex',
-                    flexDirection: 'column'
-                   }}
-                >
-                  <div className="ul-testimonial-item-txt" style={{ flex: 1 }}>
-                    <p style={{ fontSize: '1.2rem', fontStyle: 'italic', color: 'var(--ul-black)', lineHeight: 1.6, marginBottom: '24px' }}>&ldquo;{t.text}&rdquo;</p>
-                  </div>
-                  <div className="ul-testimonial-item-author" style={{ borderTop: '1px solid #F0F0F0', paddingTop: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div className="img" style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden' }}>
-                      <img src={t.avatar} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <div className="txt">
-                      <h4 className="name" style={{ fontWeight: 800, color: 'var(--ul-black)', marginBottom: '2px' }}>{t.name}</h4>
-                      <span className="role" style={{ fontSize: '0.85rem', color: 'var(--ul-gray)', display: 'block', marginBottom: '5px' }}>{t.role}</span>
-                      <div className="stars" style={{ color: '#FFB800', fontSize: '0.8rem' }}>
-                        {Array.from({ length: 5 }).map((_, si) => (
-                          <i key={si} className={`flaticon-star${si < t.rating ? '' : '-1'}`} style={{ marginRight: '2px' }}></i>
-                        ))}
+              {TESTIMONIALS.map((t, i) => {
+                const pos = (i - current + count) % count; // 0 = front
+                const isFront = pos === 0;
+                return (
+                  <motion.article
+                    key={t.id}
+                    className="ls-deck-card"
+                    aria-hidden={!isFront}
+                    animate={{
+                      y: pos * -22,
+                      z: -pos * 80,
+                      rotateX: pos * -4,
+                      scale: 1 - pos * 0.05,
+                      opacity: pos > 2 ? 0 : 1 - pos * 0.18,
+                      filter: `blur(${pos * 1.2}px)`,
+                    }}
+                    transition={{ duration: 0.8, ease: EASE }}
+                    style={{ zIndex: count - pos, pointerEvents: isFront ? 'auto' : 'none' }}
+                    drag={isFront ? 'x' : false}
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.6}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x < -80) next();
+                      else if (info.offset.x > 80) prev();
+                    }}
+                    whileDrag={{ rotateZ: 0, cursor: 'grabbing' }}
+                  >
+                    <span className="ls-deck-quote" aria-hidden="true">&ldquo;</span>
+                    <p className="ls-deck-text">{t.text}</p>
+                    <div className="ls-deck-author">
+                      <img src={t.avatar} alt={t.name} />
+                      <div>
+                        <h4>{t.name}</h4>
+                        <span className="role">{t.role}</span>
+                        <div style={{ color: '#FFB800', fontSize: '0.8rem' }}>
+                          {Array.from({ length: 5 }).map((_, si) => (
+                            <i key={si} className={`flaticon-star${si < t.rating ? '' : '-1'}`} style={{ marginRight: '2px' }}></i>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </motion.article>
+                );
+              })}
             </div>
 
-            {/* Dots */}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '10px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '30px', justifyContent: 'center' }}>
               {TESTIMONIALS.map((_, i) => (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => goTo(i)}
-                  aria-label={`Go to slide ${i + 1}`}
+                  aria-label={`Go to testimonial ${i + 1}`}
                   style={{
                     width: i === current ? '32px' : '10px',
                     height: '10px',
                     borderRadius: '999px',
                     background: i === current ? 'var(--ul-primary)' : '#D0D0D0',
-                    border: 'none', cursor: 'pointer',
-                    transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
                     padding: 0,
                   }}
                 />

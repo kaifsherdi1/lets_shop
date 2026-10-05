@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\BusinessException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,12 +24,21 @@ return Application::configure(basePath: dirname(__DIR__))
         // CORS: Must come after ForceJson, before routing
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
 
+        // Apply the 'api' rate limiter (AppServiceProvider) to every API route.
+        $middleware->throttleApi();
+
         // Alias for role-based access control middleware
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Business-rule failures carry a user-safe message and their own status.
+        $exceptions->dontReport(BusinessException::class);
+        $exceptions->render(function (BusinessException $e, Request $request) {
+            return response()->json(['message' => $e->getMessage()], $e->status());
+        });
+
         // Always return JSON errors for API routes — never HTML
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->is('api/*')) {

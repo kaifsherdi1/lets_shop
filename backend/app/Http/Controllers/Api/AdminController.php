@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -68,6 +69,10 @@ class AdminController extends Controller
             'pending_commission_value' => round((float) Commission::where('status', 'pending')->sum('amount'), 2),
             'pending_withdrawals' => WithdrawalRequest::where('status', 'pending')->count(),
             'pending_withdrawal_value' => round((float) WithdrawalRequest::where('status', 'pending')->sum('amount'), 2),
+            // The *_value figures above add AED and INR together (kept for old
+            // clients); display the per-currency amounts instead.
+            'pending_commission_value_by_currency' => $this->sumByCurrency(Commission::where('status', 'pending')),
+            'pending_withdrawal_value_by_currency' => $this->sumByCurrency(WithdrawalRequest::where('status', 'pending')),
 
             'recent_orders' => Order::with(['items.product', 'user:id,full_name,name,email'])
                 ->orderByDesc('created_at')->limit(6)->get(),
@@ -82,6 +87,17 @@ class AdminController extends Controller
                     'created_at' => $u->created_at,
                 ]),
         ]);
+    }
+
+    /** ['AED' => x, 'INR' => y] for a query over rows with currency + amount. */
+    private function sumByCurrency($query): array
+    {
+        $sums = (clone $query)->selectRaw('currency, SUM(amount) as total')->groupBy('currency')->pluck('total', 'currency');
+
+        return [
+            'AED' => round((float) ($sums['AED'] ?? 0), 2),
+            'INR' => round((float) ($sums['INR'] ?? 0), 2),
+        ];
     }
 
     private function countByRole(string|array $slugs): int
@@ -138,7 +154,7 @@ class AdminController extends Controller
             $query->whereNull('email_verified_at');
         }
 
-        $users = $query->paginate((int) $request->get('per_page', 25));
+        $users = $query->paginate(min(max((int) $request->get('per_page', 25), 1), 100));
         $users->getCollection()->transform(fn ($u) => $this->userRow($u));
 
         return response()->json($users);
@@ -155,20 +171,34 @@ class AdminController extends Controller
             ->withCount('items')
             ->orderByDesc('created_at')->limit(10)->get();
 
-        $commissionSummary = Commission::where('distributor_id', $user->id)
-            ->select('status', DB::raw('count(*) as count'), DB::raw('SUM(amount) as total'))
-            ->groupBy('status')->get()->keyBy('status');
+        // Amounts are only ever summed within one currency.
+        $rows = Commission::where('distributor_id', $user->id)
+            ->select('status', 'currency', DB::raw('SUM(amount) as total'))
+            ->groupBy('status', 'currency')->get();
+        $byCurrency = [];
+        foreach ($rows as $r) {
+            $byCurrency[$r->currency][$r->status] = round((float) $r->total, 2);
+        }
+        $summaryFor = fn (string $cur) => [
+            'pending' => $byCurrency[$cur]['pending'] ?? 0.0,
+            'approved' => $byCurrency[$cur]['approved'] ?? 0.0,
+            'paid' => $byCurrency[$cur]['paid'] ?? 0.0,
+        ];
+
+        $wallets = Wallet::where('user_id', $user->id)->orderBy('currency')->get();
 
         return response()->json([
             'user' => $this->userRow($user),
             'orders' => $orders,
             'orders_total' => Order::where('user_id', $user->id)->count(),
-            'wallet' => Wallet::where('user_id', $user->id)->first(),
+            'wallet' => $wallets->firstWhere('currency', 'AED'),
+            'wallets' => $wallets,
             'products_count' => Product::where('distributor_id', $user->id)->count(),
-            'commission_summary' => [
-                'pending' => (float) ($commissionSummary['pending']->total ?? 0),
-                'approved' => (float) ($commissionSummary['approved']->total ?? 0),
-                'paid' => (float) ($commissionSummary['paid']->total ?? 0),
+            // Legacy keys are the AED figures; every currency is in *_by_currency.
+            'commission_summary' => $summaryFor('AED'),
+            'commission_summary_by_currency' => [
+                'AED' => $summaryFor('AED'),
+                'INR' => $summaryFor('INR'),
             ],
         ]);
     }
@@ -181,7 +211,7 @@ class AdminController extends Controller
         $data = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20', 'unique:users,phone'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'role' => ['required', Rule::exists('roles', 'slug')],
         ]);
@@ -201,7 +231,7 @@ class AdminController extends Controller
         $user->forceFill(['email_verified_at' => now()])->save();
 
         if (in_array($data['role'], ['distributor', 'agent'])) {
-            Wallet::firstOrCreate(['user_id' => $user->id], ['balance' => 0]);
+            Wallet::firstOrCreate(['user_id' => $user->id, 'currency' => 'AED'], ['balance' => 0]);
         }
 
         return response()->json([
@@ -226,7 +256,7 @@ class AdminController extends Controller
         $user->update(['role_id' => $role->id]);
 
         if (in_array($request->role, ['distributor', 'agent'])) {
-            Wallet::firstOrCreate(['user_id' => $user->id], ['balance' => 0]);
+            Wallet::firstOrCreate(['user_id' => $user->id, 'currency' => 'AED'], ['balance' => 0]);
         }
 
         return response()->json(['message' => "Role updated to {$request->role}", 'user' => $this->userRow($user->load('role'))]);
@@ -235,14 +265,15 @@ class AdminController extends Controller
     /**
      * PATCH /api/admin/orders/{id}/status
      */
-    public function updateOrderStatus(Request $request, $id)
+    public function updateOrderStatus(Request $request, OrderService $orders, $id)
     {
         $request->validate([
             'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
         ]);
 
-        $order = Order::findOrFail($id);
-        $order->update(['order_status' => $request->status, 'status' => $request->status]);
+        // Moves follow the order lifecycle; cancelling also restores stock and
+        // voids/reverses commissions (same path as a customer cancellation).
+        $order = $orders->transition((int) $id, $request->status);
 
         return response()->json(['message' => 'Order status updated', 'order' => $order]);
     }
@@ -254,9 +285,15 @@ class AdminController extends Controller
     {
         $request->validate(['status' => 'required|in:active,inactive,suspended']);
 
-        $user = User::findOrFail($id);
+        $user = User::with('role')->findOrFail($id);
         if ($user->id === $request->user()->id) {
             return response()->json(['message' => 'You cannot change your own account status.'], 422);
+        }
+
+        // Managers may manage customers, vendors and accountants — not admins
+        // or other managers.
+        if (! $request->user()->isAdmin() && $user->hasAnyRole(['admin', 'manager'])) {
+            return response()->json(['message' => 'Only an administrator can change the status of admin or manager accounts.'], 403);
         }
 
         $user->update(['status' => $request->status]);

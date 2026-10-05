@@ -16,10 +16,19 @@ class CartController extends Controller
     $cart = Cart::with(['items.product.category'])
       ->firstOrCreate(['user_id' => $request->user()->id]);
 
+    // Drop items whose product was deleted or taken off sale, so a stale cart
+    // can never block checkout. The client is told how many were removed.
+    $unavailable = $cart->items->filter(fn ($item) => ! $item->product || $item->product->status !== 'active');
+    if ($unavailable->isNotEmpty()) {
+      CartItem::whereIn('id', $unavailable->pluck('id'))->delete();
+      $cart->load(['items.product.category']);
+    }
+
     return response()->json([
       'cart' => $cart,
       'total_items' => $cart->total_items,
       'total' => $cart->total,
+      'removed_unavailable' => $unavailable->count(),
     ]);
   }
 
@@ -27,10 +36,14 @@ class CartController extends Controller
   {
     $request->validate([
       'product_id' => 'required|exists:products,id',
-      'quantity' => 'required|integer|min:1',
+      'quantity' => 'required|integer|min:1|max:99',
     ]);
 
     $product = Product::findOrFail($request->product_id);
+
+    if ($product->status !== 'active') {
+      return response()->json(['message' => 'This product is not available for purchase.'], 422);
+    }
 
     // Check stock availability
     if ($product->stock_quantity < $request->quantity) {
@@ -93,8 +106,12 @@ class CartController extends Controller
     }
 
     $request->validate([
-      'quantity' => 'required|integer|min:1',
+      'quantity' => 'required|integer|min:1|max:99',
     ]);
+
+    if (! $cartItem->product || $cartItem->product->status !== 'active') {
+      return response()->json(['message' => 'This product is no longer available. Please remove it from your cart.'], 422);
+    }
 
     // Check stock availability
     if ($cartItem->product->stock_quantity < $request->quantity) {

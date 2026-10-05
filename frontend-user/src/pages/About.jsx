@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageBanner from '../components/layout/PageBanner';
 
-import aboutBanner from '../assets/images/about-banner.jpg';
-import aboutImg from '../assets/images/about-img.png';
-import missionImg from '../assets/images/about-expert.png';
-import member1 from '../assets/images/member-1.png';
-import member2 from '../assets/images/member-2.png';
-import member3 from '../assets/images/member-3.png';
-import member4 from '../assets/images/member-4.png';
+import aboutBanner from '../assets/images/about-banner.webp';
+import aboutImg from '../assets/images/about-img.webp';
+import missionImg from '../assets/images/about-expert.webp';
+import member1 from '../assets/images/member-1.webp';
+import member2 from '../assets/images/member-2.webp';
+import member3 from '../assets/images/member-3.webp';
+import member4 from '../assets/images/member-4.webp';
 
 const TEAM = [
   { img: member1, name: 'David Wilson', role: 'Founder & CEO' },

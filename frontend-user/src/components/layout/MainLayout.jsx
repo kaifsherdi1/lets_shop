@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { Suspense, useCallback, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -23,7 +23,12 @@ const MainLayout = ({ children }) => {
           ? typeof children === 'function'
             ? children(ctx)
             : children
-          : <Outlet context={ctx} />}
+          : (
+            // Keeps the header and footer on screen while a page chunk loads
+            <Suspense fallback={<div className="ls-route-loading" aria-busy="true" />}>
+              <Outlet context={ctx} />
+            </Suspense>
+          )}
       </main>
       <Footer />
     </div>

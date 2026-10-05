@@ -5,33 +5,26 @@ import { productsBanner } from '../assets/banners';
 import ProductCard from '../components/product/ProductCard';
 import { productAPI } from '../api/products';
 import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import toast from 'react-hot-toast';
+import useAddToCart from '../hooks/useAddToCart';
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const qParam = searchParams.get('q') || '';
+  const [search, setSearch] = useState(qParam);
   const { currency } = useOutletContext() || { currency: 'AED' };
   const { isAuthenticated } = useAuth();
-  const { addToCart } = useCart();
 
-  const handleAddToCart = async (productId) => {
-    if (!isAuthenticated) {
-      toast.error('Please login to add to cart');
-      return;
-    }
-    try {
-      await addToCart(productId, 1);
-      toast.success('Added to cart!');
-    } catch (error) {
-      toast.error('Failed to add to cart');
-    }
-  };
+  const handleAddToCart = useAddToCart();
 
   const activeCat = searchParams.get('category') || '';
+
+  // The header search links here with ?q= — keep the field in sync.
+  useEffect(() => {
+    setSearch(qParam);
+  }, [qParam]);
 
   useEffect(() => {
     productAPI.getCategories()

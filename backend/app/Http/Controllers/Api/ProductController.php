@@ -16,27 +16,41 @@ class ProductController extends Controller
         $this->productService = $productService;
     }
 
+    /** Public payloads only ever carry the vendor's display name. */
+    private const PUBLIC_DISTRIBUTOR = 'distributor:id,full_name';
+
     /**
-     * Roles that may see distributor cost price and commission figures.
      * These routes are public, so resolve the bearer token via the sanctum
      * guard explicitly (there is no auth middleware to do it for us).
      */
-    private function canSeeInternal(Request $request): bool
+    private function viewer(Request $request): ?\App\Models\User
     {
-        $user = $request->user() ?: $request->user('sanctum');
+        return $request->user() ?: $request->user('sanctum');
+    }
 
-        return $user && $user->hasAnyRole(['admin', 'manager', 'accountant', 'distributor', 'agent']);
+    /** Staff see every product's cost price and commission figures. */
+    private function isStaff(?\App\Models\User $user): bool
+    {
+        return $user && $user->hasAnyRole(['admin', 'manager', 'accountant']);
+    }
+
+    /** Vendors see those figures only on products they own. */
+    private function canSeeInternal(?\App\Models\User $user, \App\Models\Product $product): bool
+    {
+        return $this->isStaff($user)
+            || ($user && $user->hasAnyRole(['distributor', 'agent']) && $product->distributor_id === $user->id);
     }
 
     public function index(Request $request)
     {
         $filters = $request->only(['category_id', 'distributor_id', 'search']);
-        $perPage = (int) $request->get('per_page', 20);
+        $perPage = min(max((int) $request->get('per_page', 20), 1), 100);
+        $viewer = $this->viewer($request);
 
-        // Staff / vendors get a fresh (uncached) query with the internal cost
-        // fields revealed; the public storefront gets the cached, sanitised list.
-        if ($this->canSeeInternal($request)) {
-            $query = \App\Models\Product::with(['category', 'distributor']);
+        // Staff get a fresh (uncached) query with the internal cost fields
+        // revealed; everyone else gets the cached, sanitised storefront list.
+        if ($this->isStaff($viewer)) {
+            $query = \App\Models\Product::with(['category', 'distributor:id,full_name,email,phone']);
             if (! empty($filters['category_id'])) {
                 $query->where('category_id', $filters['category_id']);
             }
@@ -54,7 +68,13 @@ class ProductController extends Controller
             return response()->json($products);
         }
 
-        $products = $this->productService->getProducts($perPage, ['category', 'distributor'], $filters);
+        $products = $this->productService->getProducts($perPage, ['category', self::PUBLIC_DISTRIBUTOR], $filters);
+
+        if ($viewer) {
+            $products->getCollection()
+                ->filter(fn ($p) => $this->canSeeInternal($viewer, $p))
+                ->each->makeVisible(\App\Models\Product::INTERNAL_FIELDS);
+        }
 
         return response()->json($products);
     }
@@ -88,9 +108,9 @@ class ProductController extends Controller
 
     public function show(Request $request, $id)
     {
-        $product = $this->productService->getProductById($id, ['category', 'distributor']);
+        $product = $this->productService->getProductById($id, ['category', self::PUBLIC_DISTRIBUTOR]);
 
-        if ($this->canSeeInternal($request)) {
+        if ($this->canSeeInternal($this->viewer($request), $product)) {
             $product->makeVisible(\App\Models\Product::INTERNAL_FIELDS);
         }
 
@@ -121,8 +141,8 @@ class ProductController extends Controller
     {
         $product = $this->productService->getProductById($id);
 
-        // Strict ownership check — distributor can only edit their own products
-        if ($product->distributor_id !== $request->user()->id && !$request->user()->isAdmin()) {
+        // Vendors may edit only their own products; catalogue staff any product.
+        if ($product->distributor_id !== $request->user()->id && ! $request->user()->hasAnyRole(['admin', 'manager'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -143,6 +163,10 @@ class ProductController extends Controller
             'meta_title'             => 'nullable|string|max:255',
             'meta_description'       => 'nullable|string',
         ]);
+
+        if ($pricing = \App\Models\Product::pricingErrors($validated)) {
+            throw \Illuminate\Validation\ValidationException::withMessages($pricing);
+        }
 
         // Handle new image uploads (merge with existing)
         if ($request->hasFile('images')) {
@@ -169,7 +193,7 @@ class ProductController extends Controller
     {
         $product = $this->productService->getProductById($id);
 
-        if ($product->distributor_id !== $request->user()->id && !$request->user()->isAdmin()) {
+        if ($product->distributor_id !== $request->user()->id && ! $request->user()->hasAnyRole(['admin', 'manager'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

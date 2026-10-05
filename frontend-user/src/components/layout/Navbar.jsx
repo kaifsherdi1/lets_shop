@@ -1,25 +1,46 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { productAPI } from '../../api/products';
+import { resolveProductImage } from '../../utils/image';
 import BrandMark from './BrandMark';
+import Icon from '../ui/Icon';
+import './Navbar.css';
 
 const FALLBACK_CATEGORIES = [
-  { id: 'electronics', name: 'Electronics', slug: 'electronics' },
-  { id: 'fashion', name: 'Fashion', slug: 'fashion' },
-  { id: 'home-kitchen', name: 'Home & Kitchen', slug: 'home-kitchen' },
-  { id: 'sports-outdoors', name: 'Sports & Outdoors', slug: 'sports-outdoors' },
+  { id: 1, name: 'Electronics', slug: 'electronics' },
+  { id: 2, name: 'Fashion', slug: 'fashion' },
+  { id: 3, name: 'Home & Kitchen', slug: 'home-kitchen' },
+  { id: 4, name: 'Beauty & Personal Care', slug: 'beauty-personal-care' },
+  { id: 5, name: 'Sports & Outdoors', slug: 'sports-outdoors' },
 ];
+
+const ANNOUNCEMENTS = [
+  'Free delivery on every order across the UAE & India',
+  '14-day hassle-free returns on all purchases',
+  'Secure, fully encrypted checkout',
+];
+
+const EASE = [0.16, 1, 0.3, 1];
+
+const categoryLink = (c) => `/products?category=${c.id}`;
 
 export default function Navbar({ currency, setCurrency }) {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
+  const { pathname, search: locationSearch } = useLocation();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
+  const [announcement, setAnnouncement] = useState(0);
+  const [query, setQuery] = useState('');
+  const [scrolled, setScrolled] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [menu, setMenu] = useState(null); // 'categories' | 'services' | 'account' | null
+
+  const headerRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -35,319 +56,396 @@ export default function Navbar({ currency, setCurrency }) {
     };
   }, []);
 
-  // Dropdown hover states
-  const [productsOpen, setProductsOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
-  const [sideProductsOpen, setSideProductsOpen] = useState(false);
-  const [sideServicesOpen, setSideServicesOpen] = useState(false);
-
-  const dropdownRef = useRef(null);
-
   useEffect(() => {
-    function handleOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
+    const t = setInterval(() => setAnnouncement((i) => (i + 1) % ANNOUNCEMENTS.length), 4500);
+    return () => clearInterval(t);
   }, []);
 
-  // Close sidebar on route change
   useEffect(() => {
-    setSidebarOpen(false);
-  }, [navigate]);
+    const onScroll = () => setScrolled(window.scrollY > 38);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  function handleCurrency(cur) {
-    setCurrency(cur);
-  }
+  // Close every overlay on navigation; keep the search box in sync with ?q=.
+  useEffect(() => {
+    setDrawerOpen(false);
+    setMenu(null);
+    const q = new URLSearchParams(locationSearch).get('q');
+    setQuery(pathname === '/products' && q ? q : '');
+  }, [pathname, locationSearch]);
 
-  function handleLogout() {
+  useEffect(() => {
+    const onDown = (e) => {
+      if (headerRef.current && !headerRef.current.contains(e.target)) setMenu(null);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setMenu(null);
+        setDrawerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [drawerOpen]);
+
+  const toggle = (name) => setMenu((m) => (m === name ? null : name));
+
+  // Hover opens desktop menus; a click that lands right after that hover must
+  // not immediately close the menu again (touch devices emulate both events).
+  const hoverAt = useRef(0);
+  const hoverOpen = (name) => {
+    hoverAt.current = Date.now();
+    setMenu(name);
+  };
+  const clickToggle = (name) => {
+    if (Date.now() - hoverAt.current < 400) setMenu(name);
+    else toggle(name);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const q = query.trim();
+    navigate(q ? `/products?q=${encodeURIComponent(q)}` : '/products');
+  };
+
+  const handleLogout = () => {
     logout();
+    setMenu(null);
+    setDrawerOpen(false);
     navigate('/login');
-    setDropdownOpen(false);
-  }
+  };
 
-  // Close sidebar when clicking backdrop
-  function handleBackdrop() {
-    setSidebarOpen(false);
-  }
+  const firstName = (user?.full_name || user?.name || '').split(' ')[0];
+  const navCategories = categories.slice(0, 5);
 
   return (
     <>
-      {/* Backdrop for sidebar */}
-      {sidebarOpen && (
-        <div
-          onClick={handleBackdrop}
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-            zIndex: 8998,
-          }}
-        />
-      )}
+      <header ref={headerRef} className={`lsh${scrolled ? ' is-scrolled' : ''}`}>
+        {/* ── Utility bar ── */}
+        <div className="lsh-topbar">
+          <div className="lsh-container lsh-topbar-inner">
+            <div className="lsh-announce" aria-live="polite">
+              <Icon name="truck" size={16} />
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={announcement}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  {ANNOUNCEMENTS[announcement]}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+            <div className="lsh-topbar-links">
+              <Link to="/orders">Track order</Link>
+              <Link to="/services/repair">Repair service</Link>
+              <Link to="/contact">Help centre</Link>
+              <div className="lsh-currency" role="group" aria-label="Currency">
+                <Icon name="globe" size={15} />
+                {['AED', 'INR'].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={currency === c ? 'active' : ''}
+                    aria-pressed={currency === c}
+                    onClick={() => setCurrency(c)}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {/* ===== SIDEBAR ===== */}
-      <div className={`ul-sidebar${sidebarOpen ? ' sidebar-active' : ''}`} style={{ zIndex: 8999, backgroundColor: 'var(--ul-black)', transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-        <div className="ul-sidebar-header" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '20px' }}>
-          <div className="ul-sidebar-header-logo">
-            <Link to="/" onClick={() => setSidebarOpen(false)}>
-              <span style={{ fontFamily: 'var(--font-quicksand)', fontWeight: 800, fontSize: '1.6rem', color: 'var(--ul-primary)' }}>
-                Lets<span style={{ color: '#fff' }}>Shop</span>
+        {/* ── Main bar ── */}
+        <div className="lsh-main">
+          <div className="lsh-container lsh-main-inner">
+            <button type="button" className="lsh-icon-btn lsh-burger" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+              <Icon name="menu" />
+            </button>
+
+            <Link to="/" className="lsh-logo" aria-label="LetsShop home">
+              <BrandMark size={34} />
+              <span>
+                Lets<b>Shop</b>
               </span>
             </Link>
-          </div>
-          <button className="ul-sidebar-closer" onClick={() => setSidebarOpen(false)} style={{ color: '#fff', fontSize: '1.2rem' }}>
-            <i className="flaticon-close"></i>
-          </button>
-        </div>
 
-        {/* Mobile Nav */}
-        <div className="ul-sidebar-header-nav-wrapper d-block d-lg-none" style={{ padding: '20px 10px' }}>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <NavLink to="/" onClick={() => setSidebarOpen(false)} style={mobileLink}>Home</NavLink>
-            <NavLink to="/about" onClick={() => setSidebarOpen(false)} style={mobileLink}>About</NavLink>
+            <form className="lsh-search" onSubmit={handleSearch} role="search">
+              <Icon name="search" size={19} className="lsh-search-icon" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search for products, brands and more"
+                aria-label="Search products"
+              />
+              <button type="submit">Search</button>
+            </form>
 
-            {/* Products dropdown */}
-            <div style={{ padding: '0 5px' }}>
-              <button
-                onClick={() => setSideProductsOpen(v => !v)}
-                style={{ ...mobileLink, width: '100%', textAlign: 'left', background: 'rgba(255,255,255,0.03)', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                Products <i className={`flaticon-next`} style={{ fontSize: '0.8rem', transform: sideProductsOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.3s' }}></i>
-              </button>
-              {sideProductsOpen && (
-                <div style={{ paddingLeft: '15px', marginTop: '5px', display: 'flex', flexDirection: 'column', gap: '5px', borderLeft: '2px solid var(--ul-primary)' }}>
-                  <NavLink to="/products" onClick={() => setSidebarOpen(false)} style={mobileSubLink}>All Products</NavLink>
-                  {categories.map(c => (
-                    <NavLink key={c.id} to={`/products?category=${c.id}`} onClick={() => setSidebarOpen(false)} style={mobileSubLink}>{c.name}</NavLink>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <NavLink to="/contact" onClick={() => setSidebarOpen(false)} style={mobileLink}>Contact</NavLink>
-
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '15px', paddingTop: '15px' }}>
-                {user ? (
-                <>
-                    <NavLink to="/cart" onClick={() => setSidebarOpen(false)} style={mobileLink}>Cart ({totalItems})</NavLink>
-                    <NavLink to="/orders" onClick={() => setSidebarOpen(false)} style={mobileLink}>My Orders</NavLink>
-                    <NavLink to="/profile" onClick={() => setSidebarOpen(false)} style={mobileLink}>My Profile</NavLink>
-                    <button onClick={() => { handleLogout(); setSidebarOpen(false); }} style={{ ...mobileLink, background: 'rgba(231, 76, 60, 0.15)', color: '#ff6b6b', marginTop: '10px' }}>
-                    Logout
-                    </button>
-                </>
-                ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <NavLink to="/login" onClick={() => setSidebarOpen(false)} style={{ ...mobileLink, textAlign: 'center', background: 'rgba(255,255,255,0.05)' }}>Login</NavLink>
-                    <NavLink to="/register" onClick={() => setSidebarOpen(false)} style={{ ...mobileLink, textAlign: 'center', background: 'var(--ul-primary)' }}>Join Now</NavLink>
-                </div>
-                )}
-            </div>
-          </nav>
-        </div>
-
-        <div className="ul-sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: '20px' }}>
-          <span className="ul-sidebar-footer-title" style={{ color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.7rem' }}>Follow us</span>
-          <div className="ul-sidebar-footer-social" style={{ marginTop: '15px' }}>
-            <a href="#"><i className="flaticon-facebook"></i></a>
-            <a href="#"><i className="flaticon-twitter"></i></a>
-            <a href="#"><i className="flaticon-instagram"></i></a>
-            <a href="#"><i className="flaticon-youtube"></i></a>
-          </div>
-        </div>
-      </div>
-
-      {/* ===== MAIN HEADER ===== */}
-      <header className="ul-header">
-        <div className="ul-header-bottom to-be-sticky">
-          <div className="ul-header-bottom-wrapper ul-header-container">
-
-            {/* Logo */}
-            <div className="logo-container">
-              <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '8px',
-                  background: '#fff',
-                  border: '1.5px solid rgba(0,0,0,0.08)',
-                  borderRadius: '999px',
-                  padding: '6px 18px 6px 8px',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
-                }}>
-                  <BrandMark size={32} />
-                  <span style={{
-                    fontFamily: 'var(--font-quicksand)', fontWeight: 800,
-                    fontSize: '1.1rem', color: 'var(--ul-black)',
-                    letterSpacing: '-0.03em',
-                  }}>
-                    Lets<span style={{ color: 'var(--ul-primary)' }}>Shop</span>
+            <div className="lsh-actions">
+              <div className="lsh-dd-wrap">
+                <button
+                  type="button"
+                  className="lsh-action"
+                  onClick={() => (user ? toggle('account') : navigate('/login'))}
+                  aria-haspopup={user ? 'menu' : undefined}
+                  aria-expanded={menu === 'account'}
+                >
+                  <Icon name="user" />
+                  <span className="lsh-action-label">
+                    <small>{user ? `Hello, ${firstName || 'there'}` : 'Hello, sign in'}</small>
+                    <b>
+                      Account <Icon name="chevronDown" size={14} />
+                    </b>
                   </span>
+                </button>
+                <AnimatePresence>
+                  {menu === 'account' && user && (
+                    <motion.div
+                      className="lsh-dropdown lsh-dropdown--right"
+                      role="menu"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.2, ease: EASE }}
+                    >
+                      <div className="lsh-dd-head">
+                        <span className="lsh-avatar">{(firstName || user.email || 'U')[0].toUpperCase()}</span>
+                        <div>
+                          <b>{user.full_name || 'My account'}</b>
+                          <small>{user.email}</small>
+                        </div>
+                      </div>
+                      <Link to="/profile" role="menuitem"><Icon name="user" size={18} /> My profile</Link>
+                      <Link to="/orders" role="menuitem"><Icon name="package" size={18} /> My orders</Link>
+                      <Link to="/cart" role="menuitem"><Icon name="bag" size={18} /> My cart</Link>
+                      <button type="button" role="menuitem" className="danger" onClick={handleLogout}>
+                        <Icon name="logout" size={18} /> Sign out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <Link to="/orders" className="lsh-action lsh-hide-md">
+                <Icon name="package" />
+                <span className="lsh-action-label">
+                  <small>Returns</small>
+                  <b>&amp; Orders</b>
+                </span>
+              </Link>
+
+              <Link to="/cart" className="lsh-action lsh-cart" aria-label={`Cart, ${totalItems} items`}>
+                <span className="lsh-cart-icon">
+                  <Icon name="bag" size={24} />
+                  {totalItems > 0 && (
+                    <span key={totalItems} className="lsh-badge">
+                      {totalItems > 99 ? '99+' : totalItems}
+                    </span>
+                  )}
+                </span>
+                <span className="lsh-action-label">
+                  <small>Your</small>
+                  <b>Cart</b>
                 </span>
               </Link>
             </div>
-
-            {/* Desktop Nav */}
-            <div className="ul-header-nav-wrapper">
-              <div className="to-go-to-sidebar-in-mobile">
-                <nav className="ul-header-nav">
-
-                  {/* Home */}
-                  <NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>Home</NavLink>
-
-                  {/* About */}
-                  <NavLink to="/about" className={({ isActive }) => isActive ? 'active' : ''}>About</NavLink>
-
-                  {/* Products dropdown */}
-                  <div
-                    className="has-sub-menu"
-                    onMouseEnter={() => setProductsOpen(true)}
-                    onMouseLeave={() => setProductsOpen(false)}
-                  >
-                    <a role="button" style={{ cursor: 'pointer' }}>Products</a>
-                    <div className="ul-header-submenu" style={{ display: productsOpen ? 'block' : '' }}>
-                      <ul>
-                        <li><Link to="/products">All Products</Link></li>
-                        {categories.map(c => (
-                          <li key={c.id}><Link to={`/products?category=${c.id}`}>{c.name}</Link></li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Contact */}
-                  <NavLink to="/contact" className={({ isActive }) => isActive ? 'active' : ''}>Contact</NavLink>
-                </nav>
-              </div>
-            </div>
-
-            {/* Header Actions */}
-            <div className="ul-header-actions">
-              {/* Currency Selector */}
-              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '6px', marginRight: '8px' }}>
-                <button
-                  onClick={() => handleCurrency('AED')}
-                  style={{
-                    background: currency === 'AED' ? 'var(--ul-primary)' : 'transparent',
-                    color: '#fff',
-                    border: '1px solid',
-                    borderColor: currency === 'AED' ? 'var(--ul-primary)' : 'rgba(255,255,255,0.3)',
-                    borderRadius: '4px', padding: '3px 8px', fontSize: '0.78rem',
-                    fontWeight: 700, cursor: 'pointer',
-                  }}
-                >AED</button>
-                <button
-                  onClick={() => handleCurrency('INR')}
-                  style={{
-                    background: currency === 'INR' ? 'var(--ul-primary)' : 'transparent',
-                    color: '#fff',
-                    border: '1px solid',
-                    borderColor: currency === 'INR' ? 'var(--ul-primary)' : 'rgba(255,255,255,0.3)',
-                    borderRadius: '4px', padding: '3px 8px', fontSize: '0.78rem',
-                    fontWeight: 700, cursor: 'pointer',
-                  }}
-                >INR</button>
-              </div>
-
-              {/* Cart Icon — show for all, count for logged users */}
-              <Link to="/cart" title="View Cart" style={{ position: 'relative', marginRight: '12px', fontSize: '1.3rem', color: 'var(--ul-black)' }}>
-                <i className="flaticon-shopping-cart"></i>
-                {totalItems > 0 && (
-                  <span style={{
-                    position: 'absolute', top: '-8px', right: '-10px',
-                    background: 'var(--ul-primary)', color: '#fff',
-                    borderRadius: '50%', width: '18px', height: '18px',
-                    fontSize: '0.65rem', fontWeight: 800,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>{totalItems}</span>
-                )}
-              </Link>
-
-              {/* Auth buttons / User dropdown */}
-              {user ? (
-                <div ref={dropdownRef} style={{ position: 'relative' }}>
-                  <button
-                    onClick={() => setDropdownOpen(v => !v)}
-                    style={{
-                      width: '40px', height: '40px', borderRadius: '50%',
-                      background: 'var(--ul-primary)', color: '#fff',
-                      border: 'none', fontWeight: 800, fontSize: '1rem',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {user?.full_name?.[0]?.toUpperCase() || 'U'}
-                  </button>
-                  {dropdownOpen && (
-                    <div style={{
-                      position: 'absolute', right: 0, top: '50px',
-                      background: '#fff', borderRadius: '10px',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                      minWidth: '160px', zIndex: 999,
-                      padding: '8px 0',
-                    }}>
-                      <div style={{ padding: '10px 16px', borderBottom: '1px solid #f0f0f0', fontSize: '0.85rem', fontWeight: 700, color: 'var(--ul-black)' }}>
-                        {user?.full_name || user?.email}
-                      </div>
-                      <Link to="/orders" onClick={() => setDropdownOpen(false)} style={{ display: 'block', padding: '10px 16px', fontSize: '0.9rem', color: 'var(--ul-black)', fontWeight: 600 }}>
-                        <i className="flaticon-list" style={{ marginRight: '8px', color: 'var(--ul-primary)' }}></i>My Orders
-                      </Link>
-                      <Link to="/profile" onClick={() => setDropdownOpen(false)} style={{ display: 'block', padding: '10px 16px', fontSize: '0.9rem', color: 'var(--ul-black)', fontWeight: 600 }}>
-                        <i className="flaticon-user" style={{ marginRight: '8px', color: 'var(--ul-primary)' }}></i>My Profile
-                      </Link>
-                      <Link to="/cart" onClick={() => setDropdownOpen(false)} style={{ display: 'block', padding: '10px 16px', fontSize: '0.9rem', color: 'var(--ul-black)', fontWeight: 600 }}>
-                        <i className="flaticon-shopping-cart" style={{ marginRight: '8px', color: 'var(--ul-primary)' }}></i>My Cart
-                      </Link>
-                      <button onClick={handleLogout} style={{
-                        display: 'block', width: '100%', padding: '10px 16px',
-                        background: 'none', border: 'none', textAlign: 'left',
-                        fontSize: '0.9rem', color: '#e74c3c', fontWeight: 600, cursor: 'pointer',
-                      }}>
-                        <i className="flaticon-logout" style={{ marginRight: '8px' }}></i>Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="d-sm-flex d-none" style={{ gap: '12px', alignItems: 'center' }}>
-                  <Link to="/login" style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>
-                    Login
-                  </Link>
-                  <Link to="/register" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '8px',
-                    background: 'var(--ul-primary)', color: '#fff',
-                    fontWeight: 700, fontSize: '0.88rem',
-                    padding: '8px 20px', borderRadius: '999px',
-                    boxShadow: '0 4px 14px rgba(118,176,171,0.3)',
-                  }}>
-                    <i className="flaticon-fast-forward-double-right-arrows-symbol"></i>
-                    Join Now
-                  </Link>
-                </div>
-              )}
-
-              {/* Hamburger */}
-              <button
-                className="ul-header-sidebar-opener d-lg-none d-inline-flex"
-                onClick={() => setSidebarOpen(true)}
-                style={{ marginLeft: '12px' }}
-              >
-                <i className="flaticon-menu"></i>
-              </button>
-            </div>
-
           </div>
         </div>
+
+        {/* ── Category bar ── */}
+        <nav className="lsh-nav" aria-label="Primary">
+          <div className="lsh-container lsh-nav-inner">
+            <div className="lsh-dd-wrap" onMouseLeave={() => menu === 'categories' && setMenu(null)}>
+              <button
+                type="button"
+                className={`lsh-all${menu === 'categories' ? ' open' : ''}`}
+                onClick={() => clickToggle('categories')}
+                onMouseEnter={() => hoverOpen('categories')}
+                aria-expanded={menu === 'categories'}
+              >
+                <Icon name="grid" size={18} /> All categories <Icon name="chevronDown" size={15} />
+              </button>
+              <AnimatePresence>
+                {menu === 'categories' && (
+                  <motion.div
+                    className="lsh-mega"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.22, ease: EASE }}
+                  >
+                    <div className="lsh-mega-list">
+                      <span className="lsh-mega-title">Shop by department</span>
+                      {categories.map((c) => (
+                        <Link key={c.id} to={categoryLink(c)} className="lsh-mega-item">
+                          <span className="thumb">
+                            {c.image ? <img src={resolveProductImage(c.image)} alt="" loading="lazy" /> : <Icon name="grid" size={18} />}
+                          </span>
+                          <span className="txt">
+                            <b>{c.name}</b>
+                            {c.description && <small>{c.description}</small>}
+                          </span>
+                          <Icon name="chevronRight" size={16} className="chev" />
+                        </Link>
+                      ))}
+                    </div>
+                    <Link to="/products" className="lsh-mega-promo">
+                      <span className="eyebrow">Just landed</span>
+                      <b>Explore the full catalogue</b>
+                      <small>Every category, one place — delivered across the UAE &amp; India.</small>
+                      <span className="cta">
+                        Shop all products <Icon name="arrowRight" size={16} />
+                      </span>
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="lsh-links">
+              <NavLink to="/" end>Home</NavLink>
+              <NavLink to="/products" end>Shop all</NavLink>
+              {navCategories.map((c) => (
+                <Link key={c.id} to={categoryLink(c)} className={locationSearch === `?category=${c.id}` ? 'active' : ''}>
+                  {c.name.replace(' & Personal Care', '').replace(' & Outdoors', '')}
+                </Link>
+              ))}
+              <div className="lsh-dd-wrap" onMouseLeave={() => menu === 'services' && setMenu(null)}>
+                <button
+                  type="button"
+                  className={`lsh-link-btn${pathname.startsWith('/services') ? ' active' : ''}`}
+                  onClick={() => clickToggle('services')}
+                  onMouseEnter={() => hoverOpen('services')}
+                  aria-expanded={menu === 'services'}
+                >
+                  Services <Icon name="chevronDown" size={14} />
+                </button>
+                <AnimatePresence>
+                  {menu === 'services' && (
+                    <motion.div
+                      className="lsh-dropdown"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.2, ease: EASE }}
+                    >
+                      <Link to="/services/repair"><Icon name="wrench" size={18} /> Repair service</Link>
+                      <Link to="/services/replacement"><Icon name="returns" size={18} /> Replacement service</Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <NavLink to="/about">About</NavLink>
+              <NavLink to="/contact">Contact</NavLink>
+            </div>
+
+            <a href="tel:+971501234567" className="lsh-helpline">
+              <Icon name="phone" size={16} /> +971 50 123 4567
+            </a>
+          </div>
+        </nav>
       </header>
+
+      {/* ── Mobile drawer ── */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            <motion.div
+              className="lsh-scrim"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDrawerOpen(false)}
+            />
+            <motion.aside
+              className="lsh-drawer"
+             
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ duration: 0.4, ease: EASE }}
+            >
+              <div className="lsh-drawer-head">
+                <span className="lsh-drawer-hello">
+                  <span className="lsh-avatar"><Icon name="user" size={18} /></span>
+                  {user ? `Hello, ${firstName || 'there'}` : <Link to="/login">Hello, sign in</Link>}
+                </span>
+                <button type="button" className="lsh-icon-btn" onClick={() => setDrawerOpen(false)} aria-label="Close menu">
+                  <Icon name="close" />
+                </button>
+              </div>
+
+              <div className="lsh-drawer-body">
+                <span className="lsh-drawer-title">Shop by department</span>
+                {categories.map((c) => (
+                  <Link key={c.id} to={categoryLink(c)} className="lsh-drawer-link">
+                    {c.name} <Icon name="chevronRight" size={16} />
+                  </Link>
+                ))}
+                <Link to="/products" className="lsh-drawer-link strong">
+                  Shop all products <Icon name="chevronRight" size={16} />
+                </Link>
+
+                <span className="lsh-drawer-title">Help &amp; settings</span>
+                <Link to="/" className="lsh-drawer-link">Home</Link>
+                <Link to="/services/repair" className="lsh-drawer-link">Repair service</Link>
+                <Link to="/services/replacement" className="lsh-drawer-link">Replacement service</Link>
+                <Link to="/about" className="lsh-drawer-link">About us</Link>
+                <Link to="/contact" className="lsh-drawer-link">Contact &amp; help</Link>
+                {user && (
+                  <>
+                    <Link to="/orders" className="lsh-drawer-link">My orders</Link>
+                    <Link to="/profile" className="lsh-drawer-link">My profile</Link>
+                  </>
+                )}
+
+                <div className="lsh-drawer-currency">
+                  <span>Currency</span>
+                  <div className="lsh-currency lsh-currency--light">
+                    {['AED', 'INR'].map((c) => (
+                      <button key={c} type="button" className={currency === c ? 'active' : ''} onClick={() => setCurrency(c)}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="lsh-drawer-foot">
+                {user ? (
+                  <button type="button" className="lsh-btn lsh-btn--ghost" onClick={handleLogout}>Sign out</button>
+                ) : (
+                  <>
+                    <Link to="/login" className="lsh-btn lsh-btn--ghost">Sign in</Link>
+                    <Link to="/register" className="lsh-btn">Create account</Link>
+                  </>
+                )}
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }
-
-// Mobile nav link styles
-const mobileLink = {
-  display: 'block', padding: '10px 12px', fontWeight: 700,
-  color: '#fff', fontSize: '0.95rem', borderRadius: '6px',
-  background: 'transparent',
-};
-const mobileSubLink = {
-  display: 'block', padding: '8px 12px', fontWeight: 600,
-  color: 'rgba(255,255,255,0.8)', fontSize: '0.88rem', borderRadius: '4px',
-};

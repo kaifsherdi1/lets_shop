@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import PasswordField from '../components/PasswordField';
@@ -19,8 +19,15 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Only follow in-app paths, never an absolute URL smuggled into state.
+  const from = typeof location.state?.from === 'string' && location.state.from.startsWith('/') ? location.state.from : '/';
+
+  if (isAuthenticated) {
+    return <Navigate to={from} replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,7 +36,7 @@ const Login = () => {
     try {
       await login(email, password);
       toast.success('Welcome back!');
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
     } finally {

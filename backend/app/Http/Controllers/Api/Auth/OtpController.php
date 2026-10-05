@@ -34,7 +34,9 @@ class OtpController extends Controller
     }
 
     // Rate limit: 5 failed attempts per 15 minutes per email
-    $rateLimitKey = 'otp_attempts_' . sha1($request->email . $request->type);
+    // Lower-cased: on MySQL the email lookup is case-insensitive, so "A@x.com"
+    // and "a@x.com" must share one attempt budget.
+    $rateLimitKey = 'otp_attempts_' . sha1(strtolower(trim($request->email)) . $request->type);
     $maxAttempts  = 5;
     $decayMinutes = 15;
 

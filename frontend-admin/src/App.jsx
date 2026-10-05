@@ -14,8 +14,7 @@ import Users from './pages/Users.jsx';
 import Portal from './pages/Portal.jsx';
 import NotFound from './pages/NotFound.jsx';
 
-const STAFF_ROLES = ['admin', 'manager', 'accountant'];
-const isPortalRole = (role) => ['distributor', 'agent'].includes(role);
+import { can, homePath, isPortalRole } from './utils/permissions.js';
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -27,22 +26,19 @@ function PublicRoute({ children }) {
   return token ? <Navigate to="/" replace /> : children;
 }
 
-// Distributors/agents land on their portal; staff land on the ops dashboard.
+// Vendors land on their portal, admins/managers on the ops dashboard, and
+// roles without a dashboard (accountant) on their first usable screen.
 function HomeScreen() {
   const { user } = useAuth();
-  return isPortalRole(user?.role) ? <Portal /> : <Dashboard />;
+  if (isPortalRole(user?.role)) return <Portal />;
+  if (can(user?.role, 'dashboard')) return <Dashboard />;
+  return <Navigate to={homePath(user?.role)} replace />;
 }
 
-// Gate a route to staff roles; portal users are bounced to their portal.
-function StaffOnly({ children }) {
+// Only render an area the signed-in role is allowed to use (see permissions.js).
+function Allow({ area, children }) {
   const { user } = useAuth();
-  return STAFF_ROLES.includes(user?.role) ? children : <Navigate to="/portal" replace />;
-}
-
-// The portal is only meaningful for vendors; staff are sent to the dashboard.
-function PortalOnly({ children }) {
-  const { user } = useAuth();
-  return isPortalRole(user?.role) ? children : <Navigate to="/" replace />;
+  return can(user?.role, area) ? children : <Navigate to={homePath(user?.role)} replace />;
 }
 
 export default function App() {
@@ -54,13 +50,14 @@ export default function App() {
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
             <Route index element={<HomeScreen />} />
-            <Route path="products" element={<Products />} />
-            <Route path="categories" element={<StaffOnly><Categories /></StaffOnly>} />
-            <Route path="orders" element={<StaffOnly><Orders /></StaffOnly>} />
-            <Route path="commissions" element={<Commissions />} />
-            <Route path="withdrawals" element={<Withdrawals />} />
-            <Route path="users" element={<StaffOnly><Users /></StaffOnly>} />
-            <Route path="portal" element={<PortalOnly><Portal /></PortalOnly>} />
+            <Route path="products" element={<Allow area="products"><Products /></Allow>} />
+            <Route path="categories" element={<Allow area="categories"><Categories /></Allow>} />
+            <Route path="orders" element={<Allow area="orders"><Orders /></Allow>} />
+            <Route path="commissions" element={<Allow area="commissions"><Commissions /></Allow>} />
+            <Route path="withdrawals" element={<Allow area="withdrawals"><Withdrawals /></Allow>} />
+            <Route path="users" element={<Allow area="users"><Users /></Allow>} />
+            {/* The portal home is "/" for vendors; keep old /portal links working. */}
+            <Route path="portal" element={<Navigate to="/" replace />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />

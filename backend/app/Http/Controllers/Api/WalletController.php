@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Wallet;
 use App\Models\WithdrawalRequest;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class WalletController extends Controller
 {
@@ -16,38 +18,31 @@ class WalletController extends Controller
         $this->walletService = $walletService;
     }
 
-    // Get wallet balance and transactions
+    // Wallet balances (one per currency) and transactions
     public function index(Request $request)
     {
-        $data = $this->walletService->getWalletData($request->user()->id);
-        return response()->json($data);
+        return response()->json($this->walletService->getWalletData($request->user()->id));
     }
 
     // Request withdrawal
     public function requestWithdrawal(Request $request)
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:100',
+        $data = $request->validate([
+            'currency' => ['sometimes', Rule::in(Wallet::CURRENCIES)],
+            'amount' => 'required|numeric|min:100|max:10000000',
             'bank_details' => 'required|array',
-            'bank_details.account_name' => 'required|string',
-            'bank_details.account_number' => 'required|string',
-            'bank_details.bank_name' => 'required|string',
-            'bank_details.ifsc_code' => 'required|string',
+            'bank_details.account_name' => 'required|string|max:255',
+            'bank_details.account_number' => 'required|string|max:64',
+            'bank_details.bank_name' => 'required|string|max:255',
+            'bank_details.ifsc_code' => 'required|string|max:32',
         ]);
 
-        try {
-            $withdrawalRequest = $this->walletService->createWithdrawalRequest($request->user()->id, $request->all());
+        $withdrawalRequest = $this->walletService->createWithdrawalRequest($request->user()->id, $data);
 
-            return response()->json([
-                'message' => 'Withdrawal request submitted successfully',
-                'withdrawal_request' => $withdrawalRequest,
-            ], 201);
-        }
-        catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], $e->getCode() ?: 400);
-        }
+        return response()->json([
+            'message' => 'Withdrawal request submitted successfully',
+            'withdrawal_request' => $withdrawalRequest,
+        ], 201);
     }
 
     // Get withdrawal requests (User)
@@ -63,13 +58,12 @@ class WalletController extends Controller
     // Get all withdrawal requests (Admin/Accountant)
     public function allWithdrawals(Request $request)
     {
-        $query = WithdrawalRequest::with('user');
+        $perPage = min(max((int) $request->get('per_page', 20), 1), 100);
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $withdrawals = $query->orderBy('created_at', 'desc')->paginate(20);
+        $withdrawals = WithdrawalRequest::with('user:id,name,full_name,email,phone')
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
 
         return response()->json($withdrawals);
     }
@@ -77,40 +71,22 @@ class WalletController extends Controller
     // Approve withdrawal (Admin/Accountant)
     public function approveWithdrawal(Request $request, $id)
     {
-        try {
-            $withdrawalRequest = $this->walletService->approveWithdrawal($id, $request->user()->id);
+        $withdrawalRequest = $this->walletService->approveWithdrawal((int) $id, $request->user()->id);
 
-            return response()->json([
-                'message' => 'Withdrawal approved successfully',
-                'withdrawal_request' => $withdrawalRequest,
-            ]);
-        }
-        catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], $e->getCode() ?: 400);
-        }
+        return response()->json([
+            'message' => 'Withdrawal approved successfully',
+            'withdrawal_request' => $withdrawalRequest,
+        ]);
     }
 
     // Reject withdrawal (Admin/Accountant)
     public function rejectWithdrawal(Request $request, WithdrawalRequest $withdrawalRequest)
     {
-        if ($withdrawalRequest->status !== 'pending') {
-            return response()->json([
-                'message' => 'Withdrawal request is not pending'
-            ], 400);
-        }
-
-        $request->validate([
-            'notes' => 'required|string',
+        $data = $request->validate([
+            'notes' => 'required|string|max:1000',
         ]);
 
-        $withdrawalRequest->update([
-            'status' => 'rejected',
-            'approved_by' => $request->user()->id,
-            'approved_at' => now(),
-            'notes' => $request->notes,
-        ]);
+        $withdrawalRequest = $this->walletService->rejectWithdrawal($withdrawalRequest->id, $request->user()->id, $data['notes']);
 
         return response()->json([
             'message' => 'Withdrawal request rejected',

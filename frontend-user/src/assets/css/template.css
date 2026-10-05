@@ -44,8 +44,6 @@ CSS INDEX
 34. Pricing Page
 
 */
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Quicksand:wght@300..700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&display=swap");
 
 :root {
   --black: #000;
@@ -473,7 +471,7 @@ button {
 }
 
 .ul-breadcrumb {
-  background: url(../img/breadcrumb-bg.jpg) no-repeat center center;
+  background: url(../images/breadcrumb-bg.webp) no-repeat center center;
   background-size: cover;
   padding: clamp(50px, 9.98vw, 190px) 0 clamp(40px, 9.46vw, 180px);
   text-align: center;
@@ -2206,7 +2204,7 @@ button {
 }
 
 .ul-donations {
-  background: url(../img/donations-bg.png) no-repeat center center/cover;
+  background: url(../img/donations-bg.webp) no-repeat center center/cover;
   position: relative;
   z-index: 1;
 }
@@ -2219,7 +2217,7 @@ button {
   inset: 0;
   left: auto;
   border-radius: 999px 0 0 999px;
-  background: url(../img/donations-bg-img.jpg) no-repeat center center/cover;
+  background: none; /* image file was never shipped */
   width: clamp(0px, 46.56vw, 886px);
 }
 
@@ -2400,7 +2398,7 @@ button {
   mix-blend-mode: multiply;
   inset: 0;
   filter: drop-shadow(0px 4px 70px rgba(235, 83, 16, 0.2));
-  background: url(../img/donate-form-wrapper-bg.png) no-repeat center center/cover;
+  background: url(../img/donate-form-wrapper-bg.webp) no-repeat center center/cover;
   pointer-events: none;
   z-index: -1;
 }
@@ -2468,7 +2466,7 @@ button {
   content: "";
   position: absolute;
   inset: 0;
-  background: url(../img/donate-form-bg.jpg) no-repeat center center/cover;
+  background: none; /* template shipped a size placeholder (624X300) here */
   opacity: 40%;
   z-index: -1;
   border-radius: 0 20px 20px 0;
@@ -2588,7 +2586,7 @@ button {
   justify-content: center;
   flex-direction: column;
   background: no-repeat center center/cover;
-  background-image: url(../img/stat-bg.png);
+  background-image: none; /* template shipped a size placeholder (330X330) here */
   transition: 0.4s ease;
   position: relative;
   z-index: 1;
@@ -3608,7 +3606,7 @@ button {
 }
 
 .ul-cta {
-  background: url(../img/cta-bg.jpg) no-repeat center center/cover;
+  background: url(../images/cta-bg.webp) no-repeat center center/cover;
   position: relative;
   z-index: 1;
   text-align: center;
@@ -4087,7 +4085,7 @@ button {
 }
 
 .ul-volunteer-block {
-  background: url(../img/volunteer-bg-1.jpg) no-repeat center center/cover;
+  background: none; /* template shipped a size placeholder (1960X331) here */
   position: relative;
   z-index: 1;
   padding: clamp(25px, 2.1vw, 40px) clamp(15px, 8.41vw, 160px);
@@ -4163,7 +4161,7 @@ button {
 }
 
 .ul-donate-form-wrapper-2 {
-  background-image: url(../img/donate-form-2-bg.jpg);
+  background-image: none; /* template shipped a size placeholder (1960X331) here */
 }
 
 .ul-donate-form-wrapper-2::before {
@@ -4190,7 +4188,7 @@ button {
 }
 
 .ul-services {
-  background: url(../img/service-bg.png) #F5F0E2 no-repeat center center/cover;
+  background: url(../img/service-bg.webp) #F5F0E2 no-repeat center center/cover;
 }
 
 .ul-services-slider-nav {

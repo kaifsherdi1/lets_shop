@@ -58,22 +58,17 @@ class Order extends Model
         return $this->hasOne(Payment::class);
     }
 
-    // Generate unique order number
+    /**
+     * Unique order number, e.g. LS2026-48213907. Random rather than
+     * "last + 1" so simultaneous checkouts can't generate the same number.
+     */
     public static function generateOrderNumber()
     {
-        $year = date('Y');
-        $lastOrder = self::whereYear('created_at', $year)
-            ->orderBy('id', 'desc')
-            ->first();
+        do {
+            $number = 'LS' . date('Y') . '-' . str_pad((string) random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
+        } while (self::where('order_number', $number)->exists());
 
-        if ($lastOrder) {
-            $lastNumber = (int) substr($lastOrder->order_number, 6);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return 'LS' . $year . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+        return $number;
     }
 
     // Scopes

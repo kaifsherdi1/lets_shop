@@ -11,7 +11,8 @@ const STATUS_BADGE = {
   rejected: 'badge-red',
 };
 
-const APPROVER_ROLES = ['admin', 'manager', 'accountant'];
+// Matches the API: commission approval is role:admin,accountant.
+const APPROVER_ROLES = ['admin', 'accountant'];
 
 export default function Commissions() {
   const { user } = useAuth();

@@ -20,7 +20,9 @@ export default function Login() {
       toast.success('Welcome back!');
       navigate('/');
     } catch (err) {
-      toast.error(err.message || err.response?.data?.message || 'Login failed');
+      // The server's reason ("Invalid credentials", "Your account is suspended")
+      // comes first; err.message is axios's generic "Request failed with status …".
+      toast.error(err.response?.data?.message || err.message || 'Login failed');
     } finally {
       setLoading(false);
     }

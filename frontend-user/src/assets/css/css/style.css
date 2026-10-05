@@ -2206,7 +2206,7 @@ button {
 }
 
 .ul-donations {
-  background: url(../img/donations-bg.png) no-repeat center center/cover;
+  background: url(../img/donations-bg.webp) no-repeat center center/cover;
   position: relative;
   z-index: 1;
 }
@@ -2400,7 +2400,7 @@ button {
   mix-blend-mode: multiply;
   inset: 0;
   filter: drop-shadow(0px 4px 70px rgba(235, 83, 16, 0.2));
-  background: url(../img/donate-form-wrapper-bg.png) no-repeat center center/cover;
+  background: url(../img/donate-form-wrapper-bg.webp) no-repeat center center/cover;
   pointer-events: none;
   z-index: -1;
 }
@@ -4190,7 +4190,7 @@ button {
 }
 
 .ul-services {
-  background: url(../img/service-bg.png) #F5F0E2 no-repeat center center/cover;
+  background: url(../img/service-bg.webp) #F5F0E2 no-repeat center center/cover;
 }
 
 .ul-services-slider-nav {

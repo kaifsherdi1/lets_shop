@@ -2,30 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import axios from '../api/axios.js';
-
-const STAFF_ROLES = ['admin', 'manager', 'accountant'];
+import { can, isPortalRole } from '../utils/permissions.js';
 
 const ADMIN_NAV = [
   {
     section: 'Main',
     items: [
-      { to: '/',            label: 'Dashboard',    icon: <IconGrid /> },
-      { to: '/orders',      label: 'Orders',       icon: <IconBox /> },
-      { to: '/products',    label: 'Products',     icon: <IconTag /> },
-      { to: '/categories',  label: 'Categories',   icon: <IconFolder /> },
+      { to: '/',            label: 'Dashboard',    icon: <IconGrid />,   area: 'dashboard' },
+      { to: '/orders',      label: 'Orders',       icon: <IconBox />,    area: 'orders' },
+      { to: '/products',    label: 'Products',     icon: <IconTag />,    area: 'products' },
+      { to: '/categories',  label: 'Categories',   icon: <IconFolder />, area: 'categories' },
     ],
   },
   {
     section: 'Finance',
     items: [
-      { to: '/commissions', label: 'Commissions',  icon: <IconPercent /> },
-      { to: '/withdrawals', label: 'Withdrawals',  icon: <IconWallet /> },
+      { to: '/commissions', label: 'Commissions',  icon: <IconPercent />, area: 'commissions' },
+      { to: '/withdrawals', label: 'Withdrawals',  icon: <IconWallet />,  area: 'withdrawals' },
     ],
   },
   {
     section: 'Management',
     items: [
-      { to: '/users',       label: 'Users',        icon: <IconUsers /> },
+      { to: '/users',       label: 'Users',        icon: <IconUsers />,   area: 'users' },
     ],
   },
 ];
@@ -35,7 +34,6 @@ const PORTAL_NAV = [
     section: 'My Portal',
     items: [
       { to: '/',            label: 'My Dashboard', icon: <IconGrid /> },
-      { to: '/portal',      label: 'My Earnings',  icon: <IconPercent /> },
       { to: '/products',    label: 'My Products',  icon: <IconTag /> },
     ],
   },
@@ -51,12 +49,19 @@ const PORTAL_NAV = [
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const isPortalUser = ['distributor', 'agent'].includes(user?.role);
-  const NAV = isPortalUser ? PORTAL_NAV : ADMIN_NAV;
+  const isPortalUser = isPortalRole(user?.role);
+  // Staff only see the areas their role can use (permissions.js).
+  const NAV = isPortalUser
+    ? PORTAL_NAV
+    : ADMIN_NAV
+        .map((g) => ({ ...g, items: g.items.filter((i) => can(user?.role, i.area)) }))
+        .filter((g) => g.items.length);
   const [badges, setBadges] = useState({});
 
   useEffect(() => {
-    if (!STAFF_ROLES.includes(user?.role)) return;
+    // Pending-item badges come from /admin/stats; only admins can both read
+    // it and act on commissions/withdrawals.
+    if (user?.role !== 'admin') return;
     let alive = true;
     const load = () =>
       axios.get('/admin/stats').then((r) => {

@@ -19,7 +19,8 @@ class CommissionController extends Controller
     public function index(Request $request)
     {
         $filters = $request->only(['status', 'distributor_id']);
-        $commissions = $this->commissionService->listCommissions($filters, 20);
+        $perPage = min(max((int) $request->get('per_page', 20), 1), 100);
+        $commissions = $this->commissionService->listCommissions($filters, $perPage);
 
         return response()->json($commissions);
     }
@@ -35,19 +36,12 @@ class CommissionController extends Controller
     // Approve commission (Admin/Accountant)
     public function approve(Request $request, $id)
     {
-        try {
-            $commission = $this->commissionService->approveCommission($id, $request->user()->id);
+        $commission = $this->commissionService->approveCommission((int) $id, $request->user()->id);
 
-            return response()->json([
-                'message' => 'Commission approved and paid successfully',
-                'commission' => $commission,
-            ]);
-        }
-        catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage() ?: 'Failed to approve commission',
-            ], $e->getCode() ?: 400);
-        }
+        return response()->json([
+            'message' => 'Commission approved and paid successfully',
+            'commission' => $commission,
+        ]);
     }
 
     // Bulk approve commissions
@@ -64,6 +58,7 @@ class CommissionController extends Controller
             'message' => "Approved {$results['approved']} commissions, {$results['failed']} failed",
             'approved' => $results['approved'],
             'failed' => $results['failed'],
+            'errors' => $results['errors'],
         ]);
     }
 }

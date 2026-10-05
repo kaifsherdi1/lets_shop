@@ -17,7 +17,8 @@ export default function Categories() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const r = await axios.get('/categories');
+      // ?all=1: every category incl. inactive/sub-categories, uncached (staff only)
+      const r = await axios.get('/categories', { params: { all: 1 } });
       const list = r.data?.categories || r.data?.data || r.data || [];
       setCategories(Array.isArray(list) ? list : []);
     } catch { toast.error('Failed to load categories'); }

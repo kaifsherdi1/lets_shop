@@ -3,11 +3,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { productAPI } from '../../api/products';
 
-import electronicsImg from '../../assets/images/category-electronics.png';
-import fashionImg from '../../assets/images/category-fashion.png';
-import homeImg from '../../assets/images/category-home.png';
-import sportsImg from '../../assets/images/category-sports.png';
+import electronicsImg from '../../assets/images/category-electronics.webp';
+import fashionImg from '../../assets/images/category-fashion.webp';
+import homeImg from '../../assets/images/category-home.webp';
+import sportsImg from '../../assets/images/category-sports.webp';
 import { resolveProductImage } from '../../utils/image';
+import { Reveal, SplitText, Stagger, StaggerItem } from '../motion/Reveal';
+import Tilt from '../motion/Tilt';
 
 const FALLBACK_CATEGORIES = [
   { id: 1, name: 'Electronics', slug: 'electronics', description: 'Gadgets, phones, laptops and more', image: electronicsImg },
@@ -42,58 +44,47 @@ export default function Categories() {
   }, []);
 
   return (
-    <section className="ul-events ul-section-spacing" style={{ position: 'relative' }}>
+    <section id="categories" className="ul-events ul-section-spacing ls-cats" style={{ position: 'relative' }}>
       <div className="ul-container">
         <div className="ul-section-heading justify-content-center text-center" style={{ marginBottom: '50px' }}>
           <div>
-            <span className="ul-section-sub-title" style={{ background: 'rgba(118, 176, 171, 0.08)', color: 'var(--ul-primary)', padding: '6px 16px', borderRadius: '999px', display: 'inline-block', marginBottom: '12px' }}>
-              Explore
-            </span>
-            <h2 className="ul-section-title">Shop By Category</h2>
+            <Reveal><span className="ls-eyebrow">Explore</span></Reveal>
+            <SplitText as="h2" className="ul-section-title" text="Shop By Category" highlight={['Category']} />
           </div>
         </div>
 
-        <div className="row row-cols-lg-2 row-cols-md-2 row-cols-1 ul-bs-row gy-4">
-          {categories.map((cat, i) => (
-            <div className="col" key={cat.id || i}>
-              <div className="ul-event-item" style={{ borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.06)', background: '#fff' }}>
-                <div className="ul-event-item-img" style={{ height: '240px' }}>
-                  <img
-                    src={cat.image || cat.localImage}
-                    alt={cat.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => {
-                      if (cat.localImage && e.target.src !== cat.localImage) e.target.src = cat.localImage;
-                    }}
-                  />
-                </div>
-                <div className="ul-event-item-content" style={{ padding: '30px' }}>
-                  <div className="ul-event-item-txt">
-                    <div className="top" style={{ marginBottom: '15px' }}>
-                      <span className="ul-event-item-badge" style={{ background: 'var(--ul-gray3)', color: 'var(--ul-gray)', fontWeight: 700, fontSize: '0.75rem', padding: '4px 12px', borderRadius: '999px' }}>
-                        <i className="flaticon-calendar" style={{ marginRight: '6px' }}></i>
-                        Available Now
+        <Stagger className="row row-cols-xl-4 row-cols-md-2 row-cols-1 ul-bs-row gy-4" gap={0.12}>
+          {categories.map((cat, i) => {
+            const to = `/categories/${cat.slug || cat.name?.toLowerCase().replace(/\s+/g, '-') || cat.id}`;
+            return (
+              <StaggerItem className="col" key={cat.id || i}>
+                <Tilt max={10} radius={26}>
+                  <Link to={to} className="ls-cat-card">
+                    <img
+                      src={cat.image || cat.localImage}
+                      alt={cat.name}
+                      className="ls-cat-img"
+                      loading="lazy"
+                      onError={(e) => {
+                        if (cat.localImage && e.target.src !== cat.localImage) e.target.src = cat.localImage;
+                      }}
+                    />
+                    <span className="ls-cat-shade" />
+                    <span className="ls-cat-index">0{i + 1}</span>
+                    <div className="ls-cat-body">
+                      <span className="ls-cat-badge">Available Now</span>
+                      <h3 className="ls-cat-title">{cat.name}</h3>
+                      <p className="ls-cat-descr">{cat.description || `Browse our exclusive ${cat.name} collection`}</p>
+                      <span className="ls-cat-cta">
+                        Shop Now <span className="arrow">→</span>
                       </span>
                     </div>
-                    <h3 className="ul-event-item-title" style={{ marginBottom: '12px', fontSize: '1.4rem' }}>
-                      <Link to={`/categories/${cat.slug || cat.name?.toLowerCase().replace(/\s+/g, '-') || cat.id}`}>
-                        {cat.name}
-                      </Link>
-                    </h3>
-                    <p className="ul-event-item-descr" style={{ color: 'var(--ul-gray)', marginBottom: '25px', lineHeight: 1.6 }}>{cat.description || `Browse our exclusive ${cat.name} collection`}</p>
-                  </div>
-                  <Link
-                    to={`/categories/${cat.slug || cat.name?.toLowerCase().replace(/\s+/g, '-') || cat.id}`}
-                    className="ul-btn ul-btn--sm"
-                    style={{ padding: '10px 22px' }}
-                  >
-                    <i className="flaticon-fast-forward-double-right-arrows-symbol"></i> Shop Now
                   </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                </Tilt>
+              </StaggerItem>
+            );
+          })}
+        </Stagger>
       </div>
     </section>
   );

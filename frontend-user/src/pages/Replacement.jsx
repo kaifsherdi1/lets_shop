@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import PageBanner from '../components/layout/PageBanner';
 import { servicesBanner } from '../assets/banners';
 
-import service1 from '../assets/images/service-components.png';
-import service2 from '../assets/images/service-repair.png';
-import service3 from '../assets/images/service-software.png';
-import service4 from '../assets/images/service-diagnostic.png';
-import whyJoin from '../assets/images/service-why.png';
+import service1 from '../assets/images/service-components.webp';
+import service2 from '../assets/images/service-repair.webp';
+import service3 from '../assets/images/service-software.webp';
+import service4 from '../assets/images/service-diagnostic.webp';
+import whyJoin from '../assets/images/service-why.webp';
 
 const SERVICES = [
   { id: 1, img: service1, title: 'Screen Replacement', desc: 'Crystal-clear screen replacements using OEM parts. All screen types supported.' },

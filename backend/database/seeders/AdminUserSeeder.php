@@ -17,13 +17,22 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         $email = env('ADMIN_EMAIL', 'admin@letsshop.com');
-        $password = env('ADMIN_PASSWORD', 'ChangeMe!2026');
+        $password = env('ADMIN_PASSWORD');
 
         if (User::where('email', $email)->exists()) {
             $this->command?->info("Admin {$email} already exists — skipping.");
 
             return;
         }
+
+        // Never create an admin with a password anyone can read in this repo.
+        $knownDefaults = ['ChangeMe!2026', 'change-this-now', 'password'];
+        if (! app()->environment('local', 'testing') && (! $password || in_array($password, $knownDefaults, true) || strlen($password) < 12)) {
+            $this->command?->error('ADMIN_PASSWORD is missing, too short (< 12 chars) or a documented default — admin account NOT created. Set a strong ADMIN_PASSWORD and redeploy.');
+
+            return;
+        }
+        $password = $password ?: 'ChangeMe!2026'; // local development only
 
         $role = Role::where('slug', 'admin')->first();
         if (! $role) {

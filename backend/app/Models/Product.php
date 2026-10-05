@@ -49,6 +49,29 @@ class Product extends Model
         'commission_amount_aed',
     ];
 
+    /**
+     * Pricing must leave a non-negative margin in each currency: the vendor's
+     * cost price can't exceed the selling price, and the commission can't
+     * exceed the margin between them. Returns validation messages keyed by field.
+     */
+    public static function pricingErrors(array $data): array
+    {
+        $errors = [];
+        foreach (['inr' => 'INR', 'aed' => 'AED'] as $suffix => $label) {
+            $price = (float) ($data["price_{$suffix}"] ?? 0);
+            $cost = (float) ($data["distributor_price_{$suffix}"] ?? 0);
+            $commission = (float) ($data["commission_amount_{$suffix}"] ?? 0);
+
+            if ($cost > $price) {
+                $errors["distributor_price_{$suffix}"] = "The distributor price ({$label}) cannot be higher than the selling price.";
+            } elseif ($commission > round($price - $cost, 2)) {
+                $errors["commission_amount_{$suffix}"] = "The commission ({$label}) cannot exceed the selling price minus the distributor price.";
+            }
+        }
+
+        return $errors;
+    }
+
     protected function casts(): array
     {
         return [
